@@ -1,11 +1,30 @@
-import { Component, createSignal, JSX, Show } from 'solid-js';
-import { Sparkles, Lock } from 'lucide-solid';
+import { Component, createSignal, JSX, Show, onCleanup } from 'solid-js';
+import { Sparkles, Lock, ShieldAlert } from 'lucide-solid';
 
 const STORAGE_KEY = 'stellar_habits_auth';
+const LOCKOUT_KEY = 'stellar_habits_lockout';
+const MAX_ATTEMPTS = 5;
 const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD as string | undefined;
 
+function getLockout(): { attempts: number; lockedUntil: number } {
+  try {
+    const raw = localStorage.getItem(LOCKOUT_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { attempts: 0, lockedUntil: 0 };
+}
+
+function saveLockout(attempts: number, lockedUntil: number) {
+  localStorage.setItem(LOCKOUT_KEY, JSON.stringify({ attempts, lockedUntil }));
+}
+
+function lockoutDuration(attempts: number): number {
+  // 30s after 5 fails, 60s after 10, 120s after 15, etc.
+  const tier = Math.floor((attempts - 1) / MAX_ATTEMPTS);
+  return 30_000 * Math.pow(2, tier);
+}
+
 const PasswordGate: Component<{ children: JSX.Element }> = (props) => {
-  // No password configured — render app directly
   if (!APP_PASSWORD) {
     return <>{props.children}</>;
   }
@@ -15,13 +34,43 @@ const PasswordGate: Component<{ children: JSX.Element }> = (props) => {
   const [input, setInput] = createSignal('');
   const [error, setError] = createSignal(false);
 
+  const initial = getLockout();
+  const [attempts, setAttempts] = createSignal(initial.attempts);
+  const [lockedUntil, setLockedUntil] = createSignal(initial.lockedUntil);
+  const [remaining, setRemaining] = createSignal(0);
+
+  // Tick the countdown every second while locked out
+  const timer = setInterval(() => {
+    const left = Math.max(0, lockedUntil() - Date.now());
+    setRemaining(left);
+  }, 1000);
+  onCleanup(() => clearInterval(timer));
+
+  const isLocked = () => remaining() > 0;
+  const remainingSeconds = () => Math.ceil(remaining() / 1000);
+
   const handleSubmit = (e: Event) => {
     e.preventDefault();
+    if (isLocked()) return;
+
     if (btoa(input()) === expectedToken) {
       localStorage.setItem(STORAGE_KEY, expectedToken);
+      localStorage.removeItem(LOCKOUT_KEY);
       setAuthed(true);
       setError(false);
     } else {
+      const newAttempts = attempts() + 1;
+      setAttempts(newAttempts);
+
+      if (newAttempts % MAX_ATTEMPTS === 0) {
+        const until = Date.now() + lockoutDuration(newAttempts);
+        setLockedUntil(until);
+        setRemaining(until - Date.now());
+        saveLockout(newAttempts, until);
+      } else {
+        saveLockout(newAttempts, lockedUntil());
+      }
+
       setError(true);
       setTimeout(() => setError(false), 600);
       setInput('');
@@ -60,16 +109,30 @@ const PasswordGate: Component<{ children: JSX.Element }> = (props) => {
                 placeholder="Enter password"
                 value={input()}
                 onInput={(e) => setInput(e.currentTarget.value)}
-                class="input input-bordered w-full bg-base-200/50 focus:border-blue-500/50 focus:outline-none transition-all duration-300"
+                disabled={isLocked()}
+                class="input input-bordered w-full bg-base-200/50 focus:border-blue-500/50 focus:outline-none transition-all duration-300 disabled:opacity-50"
                 autofocus
               />
               <button
                 type="submit"
-                class="btn btn-primary w-full rounded-xl font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300"
+                disabled={isLocked()}
+                class="btn btn-primary w-full rounded-xl font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 disabled:opacity-50"
               >
-                Unlock
+                {isLocked() ? `Locked — ${remainingSeconds()}s` : 'Unlock'}
               </button>
             </form>
+
+            <Show when={isLocked()}>
+              <div class="flex items-center gap-2 text-error/80 text-xs font-medium">
+                <ShieldAlert size={14} />
+                <span>Too many attempts. Try again in {remainingSeconds()}s.</span>
+              </div>
+            </Show>
+            <Show when={!isLocked() && attempts() > 0 && attempts() % MAX_ATTEMPTS !== 0}>
+              <span class="text-base-content/30 text-xs">
+                {MAX_ATTEMPTS - (attempts() % MAX_ATTEMPTS)} attempts remaining
+              </span>
+            </Show>
           </div>
         </div>
       </div>
