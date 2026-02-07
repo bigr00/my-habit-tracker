@@ -2,8 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+[data-theme="dark"] {
   color-scheme: dark;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
@@ -19,6 +23,14 @@ body {
     radial-gradient(at 100% 100%, rgba(88, 28, 135, 0.15) 0px, transparent 50%),
     radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.05) 0px, transparent 60%);
   background-attachment: fixed;
+}
+
+[data-theme="light"] body {
+  background-color: #f1f5f9;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.04) 0px, transparent 60%);
 }
 
 /* ── Scrollbar ───────────────────────────────────────── */
@@ -40,12 +52,29 @@ body {
   background: #475569;
 }
 
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 /* ── Glassmorphism ───────────────────────────────────── */
 .glass {
   background: rgba(30, 41, 59, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .glass {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 /* ── Animated gradient title ─────────────────────────── */
@@ -81,6 +110,10 @@ body {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
   animation: shimmer 4s ease-in-out infinite;
   pointer-events: none;
+}
+
+[data-theme="light"] .shimmer-container::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
 }
 
 /* ── Check pop-in ────────────────────────────────────── */
@@ -275,6 +308,14 @@ body {
     inset 0 1px 0 rgba(16, 185, 129, 0.1);
 }
 
+[data-theme="light"] .day-complete-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.06) 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow:
+    0 0 20px -5px rgba(16, 185, 129, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
 /* ── Today card (week view) ──────────────────────────── */
 .day-today-card {
   background: rgba(59, 130, 246, 0.05);
@@ -284,6 +325,14 @@ body {
     inset 0 1px 0 rgba(59, 130, 246, 0.1);
 }
 
+[data-theme="light"] .day-today-card {
+  background: rgba(59, 130, 246, 0.06);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow:
+    0 0 20px -5px rgba(59, 130, 246, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
 /* ── Habit row hover highlight ───────────────────────── */
 .habit-row {
   transition: background 0.3s ease;
@@ -291,6 +340,10 @@ body {
 
 .habit-row:hover {
   background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] .habit-row:hover {
+  background: rgba(0, 0, 0, 0.02);
 }
 
 /* ── Radial chart glow ───────────────────────────────── */
@@ -305,6 +358,16 @@ body {
   100% { border-color: rgba(255, 255, 255, 0.08); }
 }
 
+@keyframes border-shimmer-light {
+  0%   { border-color: rgba(0, 0, 0, 0.06); }
+  50%  { border-color: rgba(0, 0, 0, 0.1); }
+  100% { border-color: rgba(0, 0, 0, 0.06); }
+}
+
 .glass-shimmer {
   animation: border-shimmer 4s ease-in-out infinite;
+}
+
+[data-theme="light"] .glass-shimmer {
+  animation: border-shimmer-light 4s ease-in-out infinite;
 }

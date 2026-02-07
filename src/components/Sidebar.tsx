@@ -93,7 +93,7 @@ const Sidebar: Component = () => {
       radialBar: {
         hollow: { size: '60%' },
         track: {
-          background: 'rgba(255,255,255,0.05)',
+          background: store.state.theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
           strokeWidth: '100%',
         },
         dataLabels: {
