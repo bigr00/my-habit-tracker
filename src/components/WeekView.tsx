@@ -1,7 +1,7 @@
 import { Component, For, createMemo, Show } from 'solid-js';
 import { store } from '../store';
 import { Habit, isHabitApplicableOnDate } from '../types';
-import { format, startOfWeek, addDays, isToday, parseISO } from 'date-fns';
+import { format, startOfWeek, addDays, isToday, isFuture, parseISO } from 'date-fns';
 import { weekStartsOn } from '../config';
 import { Check, PartyPopper, Settings2 } from 'lucide-solid';
 
@@ -116,6 +116,7 @@ const WeekView: Component<WeekViewProps> = (props) => {
                 <For each={applicableHabitsForDay(day)}>
                   {(habit) => {
                     const dateStr = format(day, 'yyyy-MM-dd');
+                    const future = isFuture(day);
                     const isChecked = () => store.state.history[dateStr]?.[habit.id] || false;
                     const metForWeek = () => isFreqMetForWeek(habit, day);
 
@@ -146,13 +147,15 @@ const WeekView: Component<WeekViewProps> = (props) => {
                         </div>
                       }>
                         <div
-                          onClick={() => store.toggleHabit(habit.id, dateStr)}
-                          class={`group relative flex flex-col items-center p-5 rounded-2xl transition-all duration-500 btn-press cursor-pointer overflow-hidden
-                            ${isChecked()
-                              ? 'text-base-content shadow-lg'
-                              : 'bg-base-100/50 text-base-content/50 hover:text-base-content/70 border border-base-content/5 hover:border-base-content/10'
+                          onClick={() => !future && store.toggleHabit(habit.id, dateStr)}
+                          class={`group relative flex flex-col items-center p-5 rounded-2xl transition-all duration-500 overflow-hidden
+                            ${future
+                              ? 'opacity-30 cursor-not-allowed border border-base-content/5 bg-base-100/30'
+                              : isChecked()
+                                ? 'text-base-content shadow-lg btn-press cursor-pointer'
+                                : 'bg-base-100/50 text-base-content/50 hover:text-base-content/70 border border-base-content/5 hover:border-base-content/10 btn-press cursor-pointer'
                             }`}
-                          style={isChecked() ? {
+                          style={!future && isChecked() ? {
                             'background': `linear-gradient(165deg, ${habit.color}18 0%, ${habit.color}08 100%)`,
                             'border': `1px solid ${habit.color}30`,
                             'box-shadow': `0 4px 24px -4px ${habit.color}25`

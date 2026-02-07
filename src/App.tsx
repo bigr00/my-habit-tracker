@@ -6,7 +6,8 @@ import HabitModal from './components/HabitModal';
 import PasswordGate from './components/PasswordGate';
 import { store } from './store';
 import { Habit } from './types';
-import { format, parseISO, addMonths, subMonths } from 'date-fns';
+import { format, parseISO, addMonths, subMonths, startOfMonth, startOfWeek, isBefore } from 'date-fns';
+import { weekStartsOn } from './config';
 import { ChevronLeft, ChevronRight, Plus, Sun, Moon, Sparkles } from 'lucide-solid';
 
 const App: Component = () => {
@@ -22,7 +23,17 @@ const App: Component = () => {
     store.setCurrentDate(format(new Date(), 'yyyy-MM-dd'));
   };
 
+  const canGoForward = () => {
+    const current = parseISO(store.state.currentDate);
+    const now = new Date();
+    if (store.state.viewMode === 'week') {
+      return isBefore(startOfWeek(current, { weekStartsOn }), startOfWeek(now, { weekStartsOn }));
+    }
+    return isBefore(startOfMonth(current), startOfMonth(now));
+  };
+
   const navigateMonth = (direction: number) => {
+    if (direction > 0 && !canGoForward()) return;
     const current = parseISO(store.state.currentDate);
     const next = direction > 0 ? addMonths(current, 1) : subMonths(current, 1);
     store.setCurrentDate(format(next, 'yyyy-MM-dd'));
@@ -72,7 +83,11 @@ const App: Component = () => {
                   <ChevronLeft size={18} />
                 </button>
                 <span class="text-sm font-bold min-w-[130px] text-center">{currentMonthName()}</span>
-                <button onClick={() => navigateMonth(1)} class="p-1.5 hover:bg-base-200 rounded-full transition-all duration-300 text-base-content/60 hover:text-base-content hover:scale-110 btn-press">
+                <button
+                  onClick={() => navigateMonth(1)}
+                  disabled={!canGoForward()}
+                  class={`p-1.5 rounded-full transition-all duration-300 btn-press ${canGoForward() ? 'hover:bg-base-200 text-base-content/60 hover:text-base-content hover:scale-110' : 'text-base-content/15 cursor-not-allowed'}`}
+                >
                   <ChevronRight size={18} />
                 </button>
               </div>

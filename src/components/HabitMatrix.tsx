@@ -1,7 +1,7 @@
 import { Component, For, createMemo, Show } from 'solid-js';
 import { store } from '../store';
 import { Habit, isHabitApplicableOnDate } from '../types';
-import { format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isToday } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isFuture } from 'date-fns';
 import { weekStartsOn } from '../config';
 import { Check } from 'lucide-solid';
 
@@ -146,6 +146,7 @@ const HabitMatrix: Component<HabitMatrixProps> = (props) => {
                     <For each={daysInMonth()}>
                       {(day) => {
                         const dateStr = format(day, 'yyyy-MM-dd');
+                        const future = isFuture(day);
                         const isChecked = createMemo(() => store.state.history[dateStr]?.[habit.id] || false);
                         const visible = () => isHabitVisibleOnDay(habit, day);
 
@@ -157,25 +158,28 @@ const HabitMatrix: Component<HabitMatrixProps> = (props) => {
                           }>
                           <td class="p-1">
                             <button
-                              onClick={() => store.toggleHabit(habit.id, dateStr)}
-                              class={`w-10 h-10 rounded-xl transition-all duration-300 relative group flex items-center justify-center btn-press
-                                ${isChecked()
-                                  ? 'shadow-lg scale-95 animate-cell-celebrate'
-                                  : 'hover:bg-base-200 hover:scale-105 bg-base-300/30 border border-base-content/5 hover:border-base-content/10'
+                              onClick={() => !future && store.toggleHabit(habit.id, dateStr)}
+                              disabled={future}
+                              class={`w-10 h-10 rounded-xl transition-all duration-300 relative group flex items-center justify-center
+                                ${future
+                                  ? 'opacity-25 cursor-not-allowed bg-base-300/20'
+                                  : isChecked()
+                                    ? 'shadow-lg scale-95 animate-cell-celebrate btn-press'
+                                    : 'hover:bg-base-200 hover:scale-105 bg-base-300/30 border border-base-content/5 hover:border-base-content/10 btn-press'
                                 }`}
                               style={{
-                                'background-color': isChecked() ? habit.color : '',
-                                'box-shadow': isChecked() ? `0 0 20px -3px ${habit.color}70, 0 0 6px -1px ${habit.color}40` : ''
+                                'background-color': !future && isChecked() ? habit.color : '',
+                                'box-shadow': !future && isChecked() ? `0 0 20px -3px ${habit.color}70, 0 0 6px -1px ${habit.color}40` : ''
                               }}
                             >
-                              {isChecked() ? (
+                              {!future && isChecked() ? (
                                 <div class="animate-check-pop">
                                   <Check size={14} class="text-white drop-shadow-lg" />
                                 </div>
                               ) : (
                                 <div class="w-1 h-1 rounded-full bg-base-content/10 group-hover:bg-base-content/30 transition-all duration-300 group-hover:scale-150" />
                               )}
-                              <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-base-content/5 rounded-xl pointer-events-none"></div>
+                              {!future && <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-base-content/5 rounded-xl pointer-events-none"></div>}
                             </button>
                           </td>
                           </Show>
