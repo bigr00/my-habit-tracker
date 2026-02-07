@@ -8,7 +8,38 @@ const loadState = (): AppState => {
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      
+      // Default state to fallback to
+      const defaultState: AppState = {
+        habits: [],
+        history: {},
+        viewMode: 'week',
+        currentDate: format(new Date(), 'yyyy-MM-dd'),
+        theme: 'dark'
+      };
+
+      // Merge parsed data into default state to ensure all keys exist
+      const merged = { ...defaultState, ...parsed };
+
+      // Validate habits
+      if (Array.isArray(merged.habits)) {
+        merged.habits = merged.habits.filter((h: any) => h && typeof h === 'object' && h.id && h.name);
+      } else {
+        merged.habits = [];
+      }
+
+      // Validate viewMode
+      if (!['month', 'week'].includes(merged.viewMode)) {
+        merged.viewMode = 'week';
+      }
+
+      // Validate theme
+      if (!['light', 'dark'].includes(merged.theme)) {
+        merged.theme = 'dark';
+      }
+
+      return merged;
     } catch (e) {
       console.error('Failed to load state', e);
     }
@@ -20,8 +51,9 @@ const loadState = (): AppState => {
       { id: '3', name: 'Read', color: '#10b981', icon: 'Book', createdAt: Date.now() },
     ],
     history: {},
-    viewMode: 'month',
+    viewMode: 'week',
     currentDate: format(new Date(), 'yyyy-MM-dd'),
+    theme: 'dark',
   };
 };
 
@@ -63,6 +95,10 @@ export const store = {
   },
   updateHabit: (id: string, updates: Partial<Habit>) => {
     setState('habits', (h) => h.id === id, updates);
+    saveState();
+  },
+  toggleTheme: () => {
+    setState('theme', (t) => t === 'dark' ? 'light' : 'dark');
     saveState();
   }
 };

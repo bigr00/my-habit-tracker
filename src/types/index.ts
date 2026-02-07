@@ -19,4 +19,5 @@ export interface AppState {
   history: HabitHistory;
   viewMode: ViewMode;
   currentDate: string; // ISO string for the focused day
+  theme: 'light' | 'dark';
 }

@@ -28,30 +28,30 @@ const HabitModal: Component<HabitModalProps> = (props) => {
   };
 
   return (
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
-        <div class="flex items-center justify-between p-6 border-b border-slate-800">
-          <h2 class="text-xl font-bold">New Habit</h2>
-          <button onClick={props.onClose} class="p-2 hover:bg-slate-800 rounded-full transition-colors">
-            <X size={20} />
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-base-300/80 backdrop-blur-sm">
+      <div class="bg-base-100 border border-base-content/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+        <div class="flex items-center justify-between p-6 border-b border-base-content/10">
+          <h2 class="text-xl font-bold text-base-content">New Habit</h2>
+          <button onClick={props.onClose} class="p-2 hover:bg-base-200 rounded-full transition-colors">
+            <X size={20} class="text-base-content" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} class="p-6 space-y-8">
           <div class="space-y-2">
-            <label class="text-xs uppercase tracking-widest font-bold text-slate-500">Habit Name</label>
+            <label class="text-xs uppercase tracking-widest font-bold text-base-content/50">Habit Name</label>
             <input
               type="text"
               autofocus
               value={name()}
               onInput={(e) => setName(e.currentTarget.value)}
               placeholder="e.g. Morning Yoga"
-              class="w-full bg-slate-800 border-none rounded-2xl p-4 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 transition-all"
+              class="w-full bg-base-200 border-none rounded-2xl p-4 text-base-content placeholder:text-base-content/40 focus:ring-2 focus:ring-blue-500 transition-all"
             />
           </div>
 
           <div class="space-y-3">
-            <label class="text-xs uppercase tracking-widest font-bold text-slate-500">Theme Color</label>
+            <label class="text-xs uppercase tracking-widest font-bold text-base-content/50">Theme Color</label>
             <div class="grid grid-cols-5 gap-3">
               <For each={COLORS}>
                 {(color) => (
@@ -59,7 +59,7 @@ const HabitModal: Component<HabitModalProps> = (props) => {
                     type="button"
                     onClick={() => setSelectedColor(color)}
                     class={`h-10 rounded-xl transition-all relative flex items-center justify-center
-                      ${selectedColor() === color ? 'ring-2 ring-white ring-offset-4 ring-offset-slate-900 scale-90' : 'hover:scale-105'}
+                      ${selectedColor() === color ? 'ring-2 ring-base-content ring-offset-4 ring-offset-base-100 scale-90' : 'hover:scale-105'}
                     `}
                     style={{ 'background-color': color }}
                   >
@@ -74,7 +74,7 @@ const HabitModal: Component<HabitModalProps> = (props) => {
             <button
               type="button"
               onClick={props.onClose}
-              class="flex-1 px-6 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 font-bold transition-all"
+              class="flex-1 px-6 py-4 rounded-2xl bg-base-200 hover:bg-base-300 font-bold text-base-content transition-all"
             >
               Cancel
             </button>
