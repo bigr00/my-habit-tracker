@@ -13,26 +13,29 @@ A visually rich, high-performance habit tracker built with **SolidJS**, **TypeSc
 ## Features
 
 ### Habit Management
-- Create unlimited habits with custom names, colors (9 options), and weekly frequency targets (1x–7x per week)
+- Create unlimited habits with custom names, colors (9 options), and flexible scheduling
 - Edit or delete habits at any time
 - Click any cell or card to toggle completion — no submit buttons, instant save
 
 ### Two Views
 
-**Month View (Matrix)** — Habits as rows, days as columns. See an entire month of consistency in one glance. Day headers glow green with a checkmark when all daily habits are complete, and blue for today. Sticky headers and habit names keep context while scrolling.
+**Month View (Matrix)** — Habits as rows, days as columns. See an entire month of consistency in one glance. Day headers glow green with a checkmark when all required habits are complete, and blue for today. Non-applicable cells (wrong day for a specific-day habit, or weekly target already met) are dimmed and non-interactive. Sticky headers and habit names keep context while scrolling.
 
-**Week View (Cards)** — Seven large day cards with individual habit toggles inside. Cards celebrate with a party-popper and "All Done!" state when every daily habit is checked off. Each card has a quick-edit button for adjusting habits on the spot.
+**Week View (Cards)** — Seven large day cards with individual habit toggles inside. Cards celebrate with a party-popper and "All Done!" state when every required habit is checked off. Specific-day habits only appear on their assigned days. Frequency habits show a dot-based progress indicator and collapse into a "Done this week" placeholder once their weekly target is met. Each card has a quick-edit button for adjusting habits on the spot.
 
 ### Analytics Sidebar
 - Real-time radial progress chart (overall completion %) that turns green at 100%
 - Current streak counter — consecutive days with at least one completed habit
 - Habit score — cumulative completions scored out of 100
-- Per-habit progress bars with completed/target counts, adapting to weekly or monthly view
+- Per-habit progress bars with completed/target counts, adapting to weekly or monthly view — targets for specific-day habits reflect the actual number of applicable days in the period
 
-### Flexible Frequency
-- Set habits from 1x to 7x per week
-- Non-daily habits display a frequency badge (e.g. "3x/wk") in both views
-- "Day complete" status only considers daily (7x) habits so occasional habits don't break your streak visuals
+### Day-Specific & Flexible Frequency
+- **Specific Days** mode — assign a habit to exact days of the week (e.g. Mon/Wed/Fri for Gym). The habit only appears on those days in both views and analytics targets adjust accordingly
+- **Times per Week** mode — set a frequency target from 1x to 7x per week. The habit appears on all days until the weekly target is met, then collapses into a dimmed placeholder to stay out of your way
+- Toggle between modes when creating or editing any habit; day order respects your configured week-start day
+- Non-daily habits display a frequency badge (e.g. "3x/wk" or "Mo/We/Fr") in both views
+- Frequency habits show a dot-based weekly progress indicator that fills as you complete them throughout the week
+- "Day complete" status only considers habits with a firm daily expectation (daily and specific-day habits) — frequency-mode habits never block a day from going green
 
 ### Dark & Light Themes
 - Toggle between dark (default) and light mode via the header icon
@@ -133,7 +136,7 @@ src/
   App.tsx                # Root layout, header, navigation, modals
   config.ts              # Shared env-driven config (week start day, etc.)
   types/
-    index.ts             # Habit, HabitHistory, AppState interfaces
+    index.ts             # Habit, HabitHistory, AppState interfaces + isHabitApplicableOnDate helper
   store/
     index.ts             # Reactive state, actions, localStorage persistence
   components/
