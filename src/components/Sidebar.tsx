@@ -1,11 +1,20 @@
 import { Component, createMemo, For } from 'solid-js';
 import { store } from '../store';
-import { format, addDays, startOfWeek, eachDayOfInterval, endOfWeek } from 'date-fns';
+import { format, addDays, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { SolidApexCharts } from 'solid-apexcharts';
-import { Trophy, Flame, Target, TrendingUp } from 'lucide-solid';
+import { Trophy, Flame, Target, TrendingUp, Calendar } from 'lucide-solid';
+
+interface HabitPeriodStats {
+  habitId: string;
+  done: number;
+  target: number;
+  percentage: number;
+  isMet: boolean;
+}
 
 const Sidebar: Component = () => {
   const today = () => format(new Date(), 'yyyy-MM-dd');
+  const isWeekView = () => store.state.viewMode === 'week';
 
   const validHabits = createMemo(() => {
     const habits = store.state.habits;
@@ -13,34 +22,57 @@ const Sidebar: Component = () => {
     return habits.filter(h => h && h.id && h.name);
   });
 
-  // Get weekly completions for a habit (current week)
-  const getWeeklyCompletions = (habitId: string) => {
-    const now = new Date();
-    const weekStart = startOfWeek(now);
-    const weekEnd = endOfWeek(now);
-    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-    let count = 0;
-    for (const day of days) {
-      const dateStr = format(day, 'yyyy-MM-dd');
-      if (store.state.history[dateStr]?.[habitId]) count++;
-    }
-    return count;
-  };
+  // Date strings for the viewed period — single memo drives everything
+  const periodDateStrings = createMemo(() => {
+    const current = parseISO(store.state.currentDate);
+    const start = isWeekView() ? startOfWeek(current) : startOfMonth(current);
+    const end = isWeekView() ? endOfWeek(current) : endOfMonth(current);
+    return eachDayOfInterval({ start, end }).map(d => format(d, 'yyyy-MM-dd'));
+  });
 
-  // Completion rate: daily habits check today's completion, non-daily check weekly target met
-  const completionRate = createMemo(() => {
-    const habits = validHabits();
-    if (habits.length === 0) return 0;
-    const historyToday = store.state.history[today()] || {};
-    let metCount = 0;
-    for (const h of habits) {
-      if (h.frequencyPerWeek === 7) {
-        if (historyToday[h.id]) metCount++;
-      } else {
-        if (getWeeklyCompletions(h.id) >= h.frequencyPerWeek) metCount++;
-      }
+  const periodLabel = createMemo(() => {
+    const current = parseISO(store.state.currentDate);
+    if (isWeekView()) {
+      const ws = startOfWeek(current);
+      const we = endOfWeek(current);
+      return `${format(ws, 'MMM d')} – ${format(we, 'MMM d')}`;
     }
-    return Math.round((metCount / habits.length) * 100);
+    return format(current, 'MMMM yyyy');
+  });
+
+  // All per-habit stats computed in one memo for reliable reactivity
+  const habitStats = createMemo((): HabitPeriodStats[] => {
+    const habits = validHabits();
+    const dates = periodDateStrings();
+    const history = store.state.history;
+    const weekView = isWeekView();
+    const numWeeks = dates.length / 7;
+
+    return habits.map(h => {
+      let done = 0;
+      for (const dateStr of dates) {
+        if (history[dateStr]?.[h.id]) done++;
+      }
+      const target = weekView
+        ? h.frequencyPerWeek
+        : Math.round(h.frequencyPerWeek * numWeeks);
+      const percentage = target > 0 ? Math.min(100, Math.round((done / target) * 100)) : 0;
+      return {
+        habitId: h.id,
+        done,
+        target,
+        percentage,
+        isMet: done >= target,
+      };
+    });
+  });
+
+  // Average progress across all habits (not binary met/not-met)
+  const completionRate = createMemo(() => {
+    const stats = habitStats();
+    if (stats.length === 0) return 0;
+    const total = stats.reduce((sum, s) => sum + s.percentage, 0);
+    return Math.round(total / stats.length);
   });
 
   const series = () => [completionRate()];
@@ -79,7 +111,7 @@ const Sidebar: Component = () => {
     stroke: { lineCap: 'round' as const }
   }));
 
-  const stats = createMemo(() => {
+  const streakAndScore = createMemo(() => {
     const habits = validHabits();
     if (habits.length === 0) return { streak: 0, score: 0 };
 
@@ -101,10 +133,14 @@ const Sidebar: Component = () => {
 
   return (
     <aside class="w-80 glass border-l border-base-content/5 flex flex-col p-6 overflow-y-auto custom-scrollbar animate-slide-in-right">
-      <h2 class="text-lg font-bold mb-6 flex items-center gap-2 text-base-content">
+      <h2 class="text-lg font-bold mb-2 flex items-center gap-2 text-base-content">
         <Target class="text-blue-400 animate-float" size={20} />
-        Today's Overview
+        {isWeekView() ? 'Weekly Overview' : 'Monthly Overview'}
       </h2>
+      <p class="text-xs text-base-content/40 mb-6 flex items-center gap-1.5">
+        <Calendar size={12} />
+        {periodLabel()}
+      </p>
 
       {/* ── Radial chart ─────────────────────── */}
       <div class={`rounded-3xl p-6 mb-6 border flex flex-col items-center shadow-2xl transition-all duration-700 shimmer-container
@@ -117,7 +153,7 @@ const Sidebar: Component = () => {
         </div>
         <p class={`text-sm mt-2 font-medium transition-colors duration-500
           ${completionRate() === 100 ? 'text-emerald-400' : 'text-base-content/60'}`}>
-          {completionRate() === 100 ? 'All habits on track!' : 'Daily Progress'}
+          {completionRate() === 100 ? 'All habits on track!' : `${isWeekView() ? 'Weekly' : 'Monthly'} Progress`}
         </p>
       </div>
 
@@ -127,14 +163,14 @@ const Sidebar: Component = () => {
           <div class="text-orange-400 mb-1 group-hover:scale-110 transition-transform duration-300 animate-flame">
             <Flame size={20} />
           </div>
-          <div class="text-xl font-bold text-base-content">{stats().streak}</div>
+          <div class="text-xl font-bold text-base-content">{streakAndScore().streak}</div>
           <div class="text-[10px] uppercase tracking-wider text-base-content/50 font-bold">Current Streak</div>
         </div>
         <div class="bg-base-content/5 p-4 rounded-2xl border border-base-content/5 hover:bg-base-content/10 hover:border-yellow-500/20 transition-all duration-300 cursor-default group hover:shadow-lg hover:shadow-yellow-500/5">
           <div class="text-yellow-400 mb-1 group-hover:scale-110 transition-transform duration-300 animate-trophy">
             <Trophy size={20} />
           </div>
-          <div class="text-xl font-bold text-base-content">{stats().score}</div>
+          <div class="text-xl font-bold text-base-content">{streakAndScore().score}</div>
           <div class="text-[10px] uppercase tracking-wider text-base-content/50 font-bold">Habit Score</div>
         </div>
       </div>
@@ -142,16 +178,12 @@ const Sidebar: Component = () => {
       {/* ── Quick Stats ──────────────────────── */}
       <h3 class="text-xs uppercase tracking-widest text-base-content/50 font-bold mb-4 flex items-center gap-2">
         <TrendingUp size={14} class="text-base-content/40" />
-        Quick Stats
+        {isWeekView() ? 'This Week' : 'This Month'}
       </h3>
       <div class="space-y-3">
-        <For each={validHabits()}>
-          {(habit, index) => {
-            const isDaily = () => habit.frequencyPerWeek === 7;
-            const weeklyDone = createMemo(() => getWeeklyCompletions(habit.id));
-            const target = () => habit.frequencyPerWeek;
-            const weeklyMet = () => weeklyDone() >= target();
-            const percentage = createMemo(() => Math.min(100, Math.round((weeklyDone() / target()) * 100)));
+        <For each={habitStats()}>
+          {(stat, index) => {
+            const habit = () => validHabits().find(h => h.id === stat.habitId);
 
             return (
               <div
@@ -163,20 +195,20 @@ const Sidebar: Component = () => {
                     <div
                       class="w-2 h-2 rounded-full transition-all duration-300 group-hover:scale-150"
                       style={{
-                        'background-color': habit.color,
-                        'box-shadow': `0 0 8px ${habit.color}50`
+                        'background-color': habit()?.color ?? '#888',
+                        'box-shadow': `0 0 8px ${habit()?.color ?? '#888'}50`
                       }}
                     ></div>
                     <span class="text-sm font-semibold text-base-content/70 group-hover:text-base-content transition-colors duration-300">
-                      {habit.name}
+                      {habit()?.name}
                     </span>
                   </div>
                   <div class={`text-xs font-mono font-bold px-2 py-1 rounded-lg transition-all duration-300
-                    ${weeklyMet()
+                    ${stat.isMet
                       ? 'text-emerald-400 bg-emerald-500/10'
                       : 'text-base-content/40 bg-base-300/50 group-hover:bg-base-300'
                     }`}>
-                    {weeklyDone()}/{target()}
+                    {stat.done}/{stat.target}
                   </div>
                 </div>
                 {/* Progress bar */}
@@ -184,9 +216,9 @@ const Sidebar: Component = () => {
                   <div
                     class="h-full rounded-full transition-all duration-700 animate-progress-fill"
                     style={{
-                      width: `${percentage()}%`,
-                      'background-color': weeklyMet() ? '#10b981' : habit.color,
-                      'box-shadow': `0 0 8px ${weeklyMet() ? '#10b981' : habit.color}40`
+                      width: `${stat.percentage}%`,
+                      'background-color': stat.isMet ? '#10b981' : (habit()?.color ?? '#888'),
+                      'box-shadow': `0 0 8px ${stat.isMet ? '#10b981' : (habit()?.color ?? '#888')}40`
                     }}
                   />
                 </div>
