@@ -1,7 +1,6 @@
 import { Component, For, createMemo, Show } from 'solid-js';
 import { store } from '../store';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from 'date-fns';
-import { motion } from '@motionone/solid';
 
 const HabitMatrix: Component = () => {
   const daysInMonth = createMemo(() => {
@@ -9,6 +8,12 @@ const HabitMatrix: Component = () => {
     const start = startOfMonth(date);
     const end = endOfMonth(date);
     return eachDayOfInterval({ start, end });
+  });
+
+  const validHabits = createMemo(() => {
+    const habits = store.state.habits;
+    if (!Array.isArray(habits)) return [];
+    return habits.filter(h => h && h.name);
   });
 
   return (
@@ -33,29 +38,30 @@ const HabitMatrix: Component = () => {
             </tr>
           </thead>
           <tbody>
-            <For each={store.state.habits}>
-              {(habit) => (
-                <Show when={habit}>
+            <For each={validHabits()}>
+              {(habit) => {
+                if (!habit) return null;
+                return (
                   <tr>
                     <td class="sticky left-0 glass z-20 p-4 border-b border-base-content/5">
                       <div class="flex items-center gap-3">
                         <div class="w-1.5 h-6 rounded-full shadow-[0_0_10px_currentColor]" style={{ 'background-color': habit.color, 'color': habit.color }}></div>
-                        <span class="font-medium text-base-content whitespace-nowrap">{habit.name}</span>
+                        <span class="font-bold text-base-content whitespace-nowrap">{habit.name}</span>
                       </div>
                     </td>
                     <For each={daysInMonth()}>
                       {(day) => {
                         const dateStr = format(day, 'yyyy-MM-dd');
-                        const isChecked = () => store.state.history[dateStr]?.[habit.id] || false;
+                        const isChecked = createMemo(() => store.state.history[dateStr]?.[habit.id] || false);
                         
                         return (
                           <td class="p-1">
                             <button
                               onClick={() => store.toggleHabit(habit.id, dateStr)}
-                              class={`w-8 h-8 rounded-lg transition-all duration-300 relative group flex items-center justify-center
+                              class={`w-10 h-10 rounded-xl transition-all duration-300 relative group flex items-center justify-center
                                 ${isChecked() 
-                                  ? 'shadow-[0_0_15px_rgba(0,0,0,0.3)]' 
-                                  : 'hover:bg-base-200 bg-base-300 border border-base-200'
+                                  ? 'shadow-lg scale-95' 
+                                  : 'hover:bg-base-200 bg-base-300/30 border border-base-content/5'
                                 }`}
                               style={{ 
                                 'background-color': isChecked() ? habit.color : '',
@@ -63,27 +69,23 @@ const HabitMatrix: Component = () => {
                               }}
                             >
                               {isChecked() && (
-                                <motion.div 
-                                  initial={{ scale: 0, opacity: 0 }}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  class="w-2 h-2 bg-white rounded-full shadow-lg"
-                                />
+                                <div class="w-1.5 h-1.5 bg-white rounded-full shadow-lg animate-in zoom-in duration-300" />
                               )}
-                              <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-white/5 rounded-lg pointer-events-none"></div>
+                              <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-base-content/5 rounded-xl pointer-events-none"></div>
                             </button>
                           </td>
                         );
                       }}
                     </For>
                   </tr>
-                </Show>
-              )}
+                );
+              }}
             </For>
           </tbody>
         </table>
       </div>
       
-      {store.state.habits.length === 0 && (
+      {validHabits().length === 0 && (
         <div class="flex flex-col items-center justify-center p-20 text-base-content/50 border-2 border-dashed border-base-content/20 rounded-3xl">
           <p>No habits added yet. Start by adding your first habit!</p>
         </div>

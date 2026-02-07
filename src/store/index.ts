@@ -2,7 +2,7 @@ import { createStore } from 'solid-js/store';
 import { Habit, HabitHistory, AppState, ViewMode } from '../types';
 import { format } from 'date-fns';
 
-const LOCAL_STORAGE_KEY = 'stellar_habits_data';
+const LOCAL_STORAGE_KEY = 'stellar_habits_v2';
 
 const loadState = (): AppState => {
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);

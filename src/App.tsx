@@ -15,58 +15,69 @@ const App: Component = () => {
     document.documentElement.setAttribute('data-theme', store.state.theme);
   });
 
-  const navigateMonth = (direction: number) => {
-    const date = parseISO(store.state.currentDate);
-    const newDate = new Date(date.getFullYear(), date.getMonth() + direction, 1);
-    store.setCurrentDate(format(newDate, 'yyyy-MM-dd'));
+  const goToToday = () => {
+    store.setCurrentDate(format(new Date(), 'yyyy-MM-dd'));
   };
 
   return (
-    <div class="flex h-screen bg-base-100 text-base-content overflow-hidden">
+    <div class="flex h-screen bg-base-100 text-base-content overflow-hidden font-sans">
       <div class="flex-1 flex flex-col min-w-0">
-        <header class="h-16 flex items-center justify-between px-8 border-b border-base-content/5 glass z-20">
-          <div class="flex items-center gap-4">
+        <header class="h-16 flex items-center justify-between px-8 border-b border-base-content/5 glass z-30">
+          <div class="flex items-center gap-6">
             <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
               Stellar Habits
             </h1>
-            <div class="flex items-center gap-2 bg-base-200/50 rounded-lg p-1">
+            <div class="flex items-center gap-1 bg-base-200/50 rounded-xl p-1">
               <button 
                 onClick={() => store.setViewMode('month')}
-                class={`px-3 py-1 rounded-md text-sm transition-all ${store.state.viewMode === 'month' ? 'bg-base-300 text-base-content shadow-lg' : 'text-base-content/60 hover:text-base-content'}`}
+                class={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${store.state.viewMode === 'month' ? 'bg-base-100 text-base-content shadow-sm' : 'text-base-content/40 hover:text-base-content/70'}`}
               >
                 Month
               </button>
               <button 
                 onClick={() => store.setViewMode('week')}
-                class={`px-3 py-1 rounded-md text-sm transition-all ${store.state.viewMode === 'week' ? 'bg-base-300 text-base-content shadow-lg' : 'text-base-content/60 hover:text-base-content'}`}
+                class={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${store.state.viewMode === 'week' ? 'bg-base-100 text-base-content shadow-sm' : 'text-base-content/40 hover:text-base-content/70'}`}
               >
                 Week
               </button>
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <button onClick={store.toggleTheme} class="p-2 hover:bg-base-200 rounded-full transition-colors text-base-content/70 hover:text-base-content">
-              <Show when={store.state.theme === 'dark'} fallback={<Moon size={20} />}>
-                <Sun size={20} />
-              </Show>
-            </button>
-            <div class="flex items-center gap-2">
-              <button onClick={() => navigateMonth(-1)} class="p-1 hover:bg-base-200 rounded-full transition-colors">
-                <ChevronLeft size={20} />
+          <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3">
+              <button 
+                onClick={goToToday}
+                class="px-3 py-1.5 rounded-lg text-xs font-bold border border-base-content/10 hover:bg-base-200 transition-colors"
+              >
+                Today
               </button>
-              <span class="text-sm font-medium min-w-[120px] text-center">{currentMonthName()}</span>
-              <button onClick={() => navigateMonth(1)} class="p-1 hover:bg-base-200 rounded-full transition-colors">
-                <ChevronRight size={20} />
+              <div class="flex items-center gap-1">
+                <button onClick={() => navigateMonth(-1)} class="p-1.5 hover:bg-base-200 rounded-full transition-colors text-base-content/60">
+                  <ChevronLeft size={18} />
+                </button>
+                <span class="text-sm font-bold min-w-[130px] text-center">{currentMonthName()}</span>
+                <button onClick={() => navigateMonth(1)} class="p-1.5 hover:bg-base-200 rounded-full transition-colors text-base-content/60">
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div class="h-6 w-px bg-base-content/10"></div>
+
+            <div class="flex items-center gap-3">
+              <button onClick={store.toggleTheme} class="p-2.5 hover:bg-base-200 rounded-xl transition-colors text-base-content/60 hover:text-base-content">
+                <Show when={store.state.theme === 'dark'} fallback={<Moon size={20} />}>
+                  <Sun size={20} />
+                </Show>
+              </button>
+              <button 
+                onClick={() => setShowModal(true)}
+                class="btn btn-primary btn-sm h-10 px-4 gap-2 rounded-xl normal-case font-bold shadow-lg shadow-blue-500/20"
+              >
+                <Plus size={18} />
+                Add Habit
               </button>
             </div>
-            <button 
-              onClick={() => setShowModal(true)}
-              class="btn btn-primary btn-sm gap-2 rounded-xl"
-            >
-              <Plus size={16} />
-              Add Habit
-            </button>
           </div>
         </header>
 
