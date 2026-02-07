@@ -2,6 +2,7 @@ import { Component, For, createMemo, Show } from 'solid-js';
 import { store } from '../store';
 import { Habit } from '../types';
 import { format, startOfWeek, addDays, isToday, parseISO } from 'date-fns';
+import { weekStartsOn } from '../config';
 import { Check, PartyPopper, Settings2 } from 'lucide-solid';
 
 interface WeekViewProps {
@@ -10,7 +11,7 @@ interface WeekViewProps {
 
 const WeekView: Component<WeekViewProps> = (props) => {
   const weekDays = createMemo(() => {
-    const start = startOfWeek(parseISO(store.state.currentDate));
+    const start = startOfWeek(parseISO(store.state.currentDate), { weekStartsOn });
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
   });
 

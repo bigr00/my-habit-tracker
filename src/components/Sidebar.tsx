@@ -1,6 +1,7 @@
 import { Component, createMemo, For } from 'solid-js';
 import { store } from '../store';
 import { format, addDays, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { weekStartsOn } from '../config';
 import { SolidApexCharts } from 'solid-apexcharts';
 import { Trophy, Flame, Target, TrendingUp, Calendar } from 'lucide-solid';
 
@@ -25,16 +26,16 @@ const Sidebar: Component = () => {
   // Date strings for the viewed period — single memo drives everything
   const periodDateStrings = createMemo(() => {
     const current = parseISO(store.state.currentDate);
-    const start = isWeekView() ? startOfWeek(current) : startOfMonth(current);
-    const end = isWeekView() ? endOfWeek(current) : endOfMonth(current);
+    const start = isWeekView() ? startOfWeek(current, { weekStartsOn }) : startOfMonth(current);
+    const end = isWeekView() ? endOfWeek(current, { weekStartsOn }) : endOfMonth(current);
     return eachDayOfInterval({ start, end }).map(d => format(d, 'yyyy-MM-dd'));
   });
 
   const periodLabel = createMemo(() => {
     const current = parseISO(store.state.currentDate);
     if (isWeekView()) {
-      const ws = startOfWeek(current);
-      const we = endOfWeek(current);
+      const ws = startOfWeek(current, { weekStartsOn });
+      const we = endOfWeek(current, { weekStartsOn });
       return `${format(ws, 'MMM d')} – ${format(we, 'MMM d')}`;
     }
     return format(current, 'MMMM yyyy');

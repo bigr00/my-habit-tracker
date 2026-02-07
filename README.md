@@ -112,6 +112,16 @@ npm run serve   # preview the production build
 
 On hosting platforms like Vercel or Netlify, add `VITE_APP_PASSWORD` as an environment variable in the project settings instead.
 
+### Configure First Day of Week (optional)
+
+By default the week starts on **Monday**. To start on Sunday instead, set in your `.env`:
+
+```
+VITE_WEEK_STARTS_ON=sunday
+```
+
+Restart the dev server (or rebuild) for the change to take effect. Valid values: `monday` (default), `sunday`.
+
 ---
 
 ## Project Structure
@@ -121,6 +131,7 @@ src/
   index.tsx              # Entry point
   index.css              # Tailwind directives + 25+ custom animations
   App.tsx                # Root layout, header, navigation, modals
+  config.ts              # Shared env-driven config (week start day, etc.)
   types/
     index.ts             # Habit, HabitHistory, AppState interfaces
   store/
