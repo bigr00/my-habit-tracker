@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import HabitMatrix from './components/HabitMatrix';
 import WeekView from './components/WeekView';
 import HabitModal from './components/HabitModal';
+import PasswordGate from './components/PasswordGate';
 import { store } from './store';
 import { Habit } from './types';
 import { format, parseISO, addMonths, subMonths } from 'date-fns';
@@ -32,6 +33,7 @@ const App: Component = () => {
   };
 
   return (
+    <PasswordGate>
     <div class="flex h-screen bg-base-100 text-base-content overflow-hidden font-sans">
       <div class="flex-1 flex flex-col min-w-0">
         {/* ── Header ─────────────────────────────────── */}
@@ -116,6 +118,7 @@ const App: Component = () => {
         )}
       </Show>
     </div>
+    </PasswordGate>
   );
 };
 

@@ -371,3 +371,14 @@ body {
 [data-theme="light"] .glass-shimmer {
   animation: border-shimmer-light 4s ease-in-out infinite;
 }
+
+/* ── Password gate shake ────────────────────────────── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 50%, 90% { transform: translateX(-6px); }
+  30%, 70% { transform: translateX(6px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}

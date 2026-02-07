@@ -1,80 +1,152 @@
-# ✨ Stellar Habits
+# Stellar Habits
 
-A visually stunning, high-performance habit tracker designed for those who crave satisfying visual feedback and data-driven progress. Built with **Solid.js**, **TypeScript**, and **Tailwind CSS**, Stellar Habits focuses on a "smart" layout that moves away from traditional calendar grids toward a more intuitive, matrix-based visualization.
+A visually rich, high-performance habit tracker built with **SolidJS**, **TypeScript**, and **Tailwind CSS**. Stellar Habits replaces the traditional calendar grid with a matrix-based visualization designed for instant pattern recognition and satisfying feedback on every interaction.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Solid.js](https://img.shields.io/badge/Solid.js-2c4f7c?logo=solid&logoColor=fff)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwind-css&logoColor=fff)
-
-## 🌌 The Vision
-
-Stellar Habits is crafted for the OCD/ADHD mind. We believe that tracking habits should be as satisfying as playing a game. Every check-off is designed to feel rewarding, and every view is optimized to reduce cognitive load while providing maximum insight.
-
-### Key Features
-
-- **🛸 Smart Matrix View:** A non-traditional monthly view. Habits as rows, days as columns. See your entire month's consistency at a single glance with glowing, color-coded indicators.
-- **📅 Focus Week Mode:** Switch to a detailed weekly view to focus on the "now." Large cards, clear labels, and high-contrast completion states.
-- **📊 Visual HUD (Heads-Up Display):** A persistent sidebar featuring real-time radial progress charts, streak counters (Fire), and daily scores (Trophy).
-- **✨ Satisfying Micro-interactions:** Fluid animations powered by Motion One. Every interaction feels snappy and deliberate.
-- **🛠️ Flexible Management:** Effortlessly add, edit, or remove habits with a dedicated theme-color picker for personalization.
-- **💾 Local First:** Your data is yours. Everything is persisted in `localStorage` for instant loading and privacy.
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=fff)
 
 ---
 
-## 🛠️ Tech Stack
+## Features
 
-- **Framework:** [Solid.js](https://www.solidjs.com/) (Fine-grained reactivity)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS + [DaisyUI](https://daisyui.com/)
-- **Animations:** [Motion One](https://motion.dev/)
-- **Icons:** [Lucide Solid](https://lucide.dev/)
-- **Charts:** [ApexCharts](https://apexcharts.com/)
-- **Date Handling:** [date-fns](https://date-fns.org/)
-- **Build Tool:** Vite
+### Habit Management
+- Create unlimited habits with custom names, colors (9 options), and weekly frequency targets (1x–7x per week)
+- Edit or delete habits at any time
+- Click any cell or card to toggle completion — no submit buttons, instant save
+
+### Two Views
+
+**Month View (Matrix)** — Habits as rows, days as columns. See an entire month of consistency in one glance. Day headers glow green with a checkmark when all daily habits are complete, and blue for today. Sticky headers and habit names keep context while scrolling.
+
+**Week View (Cards)** — Seven large day cards with individual habit toggles inside. Cards celebrate with a party-popper and "All Done!" state when every daily habit is checked off. Each card has a quick-edit button for adjusting habits on the spot.
+
+### Analytics Sidebar
+- Real-time radial progress chart (overall completion %) that turns green at 100%
+- Current streak counter — consecutive days with at least one completed habit
+- Habit score — cumulative completions scored out of 100
+- Per-habit progress bars with completed/target counts, adapting to weekly or monthly view
+
+### Flexible Frequency
+- Set habits from 1x to 7x per week
+- Non-daily habits display a frequency badge (e.g. "3x/wk") in both views
+- "Day complete" status only considers daily (7x) habits so occasional habits don't break your streak visuals
+
+### Dark & Light Themes
+- Toggle between dark (default) and light mode via the header icon
+- All glassmorphism, gradients, glows, and animations adapt to the active theme
+- Preference persists across sessions
+
+### Animations
+- 25+ hand-tuned CSS keyframe animations: cell bounces on completion, floating icons, shimmer sweeps, glow pulses, staggered fade-ins, modal entrances, flame-flicker streaks, trophy bounces, and more
+- Button press scale feedback on every interactive element
+
+### Local-First Data
+- All data stored in `localStorage` (key: `stellar_habits_v2`)
+- Auto-saves on every change with zero network requests
+- Automatic data migration and corruption recovery
+
+### Optional Password Protection
+- Set `VITE_APP_PASSWORD` as an environment variable to enable a client-side password gate
+- Disabled by default — the app loads with no prompt when the variable is unset
+- On correct entry, an auth token is saved to `localStorage` so you're not asked again
+- Styled login screen with the app's glassmorphism aesthetic and a shake animation on wrong password
+
+> **Note:** This is a casual client-side deterrent (the password is baked into the JS bundle at build time), not cryptographic security.
 
 ---
 
-## 🚀 Getting Started
+## Tech Stack
+
+| Layer | Library |
+|-------|---------|
+| Framework | [SolidJS](https://www.solidjs.com/) |
+| Language | TypeScript (strict mode) |
+| Styling | Tailwind CSS + [DaisyUI](https://daisyui.com/) |
+| Animations | [Motion One](https://motion.dev/) + custom CSS keyframes |
+| Icons | [Lucide Solid](https://lucide.dev/) |
+| Charts | [ApexCharts](https://apexcharts.com/) via solid-apexcharts |
+| Dates | [date-fns](https://date-fns.org/) |
+| Build | [Vite](https://vitejs.dev/) |
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js v18+
 - npm or pnpm
 
 ### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/my-habit-tracker.git
-   cd my-habit-tracker
-   ```
+```bash
+git clone https://github.com/your-username/my-habit-tracker.git
+cd my-habit-tracker
+npm install
+npm run dev
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+The dev server starts at `http://localhost:3000`.
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+### Build for Production
 
-4. Open your browser to `http://localhost:3000`
+```bash
+npm run build
+npm run serve   # preview the production build
+```
+
+### Enable Password Protection (optional)
+
+1. Copy the example env file:
+   ```bash
+   cp .env.example .env
+   ```
+2. Set your password:
+   ```
+   VITE_APP_PASSWORD=your-secret-here
+   ```
+3. Rebuild or restart the dev server. The password gate will now appear on load.
+
+On hosting platforms like Vercel or Netlify, add `VITE_APP_PASSWORD` as an environment variable in the project settings instead.
 
 ---
 
-## 🧠 Design Philosophy
+## Project Structure
 
-- **High Contrast:** Using a Deep Slate/Navy palette (`#0f172a`) ensures that habit colors (Neon/Pastels) pop, making completion states unmistakable.
-- **Consistency over Complexity:** The "Smart Matrix" allows you to spot patterns in your behavior (e.g., "I always fail on Tuesdays") without digging through menus.
-- **Reduced Friction:** No "Submit" buttons for daily tracking. Click and it's saved.
+```
+src/
+  index.tsx              # Entry point
+  index.css              # Tailwind directives + 25+ custom animations
+  App.tsx                # Root layout, header, navigation, modals
+  types/
+    index.ts             # Habit, HabitHistory, AppState interfaces
+  store/
+    index.ts             # Reactive state, actions, localStorage persistence
+  components/
+    PasswordGate.tsx     # Optional password protection wrapper
+    Sidebar.tsx          # Analytics sidebar (chart, streaks, scores, per-habit stats)
+    HabitMatrix.tsx      # Month view — matrix grid
+    WeekView.tsx         # Week view — day cards
+    HabitModal.tsx       # Create / edit / delete habit form
+```
 
 ---
 
-## 📜 License
+## Design Philosophy
+
+- **High contrast** — Deep slate/navy backgrounds make neon habit colors pop, so completion states are unmistakable at a glance.
+- **Consistency over complexity** — The matrix layout surfaces behavioral patterns (e.g. "I always skip Tuesdays") without menus or drill-downs.
+- **Reduced friction** — One click to track, zero network requests, instant visual feedback.
+
+---
+
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
-*Made with ❤️ for the habit builders.*
+*Made for the habit builders.*
