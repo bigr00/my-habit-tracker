@@ -14,12 +14,14 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #020617;
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(88, 28, 135, 0.15) 0px, transparent 50%);
+    radial-gradient(at 100% 100%, rgba(88, 28, 135, 0.15) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.05) 0px, transparent 60%);
   background-attachment: fixed;
 }
 
+/* ── Scrollbar ───────────────────────────────────────── */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -38,10 +40,271 @@ body {
   background: #475569;
 }
 
-/* Glassmorphism utility */
+/* ── Glassmorphism ───────────────────────────────────── */
 .glass {
   background: rgba(30, 41, 59, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Animated gradient title ─────────────────────────── */
+@keyframes gradient-flow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-title {
+  background-size: 300% 300%;
+  animation: gradient-flow 6s ease infinite;
+}
+
+/* ── Shimmer / shine sweep ───────────────────────────── */
+@keyframes shimmer {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+
+.shimmer-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  animation: shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ── Check pop-in ────────────────────────────────────── */
+@keyframes check-pop {
+  0%   { transform: scale(0) rotate(-45deg); opacity: 0; }
+  50%  { transform: scale(1.4) rotate(10deg); opacity: 1; }
+  70%  { transform: scale(0.85) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.animate-check-pop {
+  animation: check-pop 0.45s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+/* ── Cell celebration bounce ─────────────────────────── */
+@keyframes cell-celebrate {
+  0%   { transform: scale(1); }
+  20%  { transform: scale(0.82); }
+  50%  { transform: scale(1.12); }
+  75%  { transform: scale(0.96); }
+  100% { transform: scale(0.95); }
+}
+
+.animate-cell-celebrate {
+  animation: cell-celebrate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── Glow pulse on completed day headers ─────────────── */
+@keyframes glow-pulse-green {
+  0%, 100% { box-shadow: 0 0 15px -2px rgba(16, 185, 129, 0.45); }
+  50%      { box-shadow: 0 0 25px -2px rgba(16, 185, 129, 0.7); }
+}
+
+.animate-glow-pulse-green {
+  animation: glow-pulse-green 2.5s ease-in-out infinite;
+}
+
+@keyframes glow-pulse-blue {
+  0%, 100% { box-shadow: 0 0 15px -2px rgba(59, 130, 246, 0.45); }
+  50%      { box-shadow: 0 0 25px -2px rgba(59, 130, 246, 0.7); }
+}
+
+.animate-glow-pulse-blue {
+  animation: glow-pulse-blue 2.5s ease-in-out infinite;
+}
+
+/* ── Ring expand burst ───────────────────────────────── */
+@keyframes ring-burst {
+  0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  100% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+}
+
+.animate-ring-burst {
+  animation: ring-burst 1.5s ease-out infinite;
+}
+
+/* ── Fade in up (for staggered entrances) ────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+/* ── Float (for hover / idle cards) ──────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ── Modal entrance ──────────────────────────────────── */
+@keyframes modal-enter {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes backdrop-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-modal-enter {
+  animation: modal-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop-enter {
+  animation: backdrop-enter 0.25s ease-out forwards;
+}
+
+/* ── Sidebar slide-in ────────────────────────────────── */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.6s ease-out both;
+}
+
+/* ── Scale pulse (idle attention) ────────────────────── */
+@keyframes scale-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+.animate-scale-pulse {
+  animation: scale-pulse 3s ease-in-out infinite;
+}
+
+/* ── Sparkle dots on completed cells ─────────────────── */
+@keyframes sparkle-1 {
+  0%, 100% { opacity: 0; transform: translate(0, 0) scale(0); }
+  40%      { opacity: 1; transform: translate(-8px, -10px) scale(1); }
+  80%      { opacity: 0; transform: translate(-12px, -16px) scale(0.5); }
+}
+
+@keyframes sparkle-2 {
+  0%, 100% { opacity: 0; transform: translate(0, 0) scale(0); }
+  40%      { opacity: 1; transform: translate(8px, -10px) scale(1); }
+  80%      { opacity: 0; transform: translate(12px, -16px) scale(0.5); }
+}
+
+@keyframes sparkle-3 {
+  0%, 100% { opacity: 0; transform: translate(0, 0) scale(0); }
+  40%      { opacity: 1; transform: translate(0, -12px) scale(1); }
+  80%      { opacity: 0; transform: translate(0, -20px) scale(0.5); }
+}
+
+/* ── Streak flame flicker ────────────────────────────── */
+@keyframes flame-flicker {
+  0%, 100% { transform: scaleY(1) rotate(0deg); }
+  25%      { transform: scaleY(1.1) rotate(-3deg); }
+  50%      { transform: scaleY(0.95) rotate(2deg); }
+  75%      { transform: scaleY(1.08) rotate(-1deg); }
+}
+
+.animate-flame {
+  animation: flame-flicker 1.5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* ── Trophy bounce ───────────────────────────────────── */
+@keyframes trophy-bounce {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-8deg); }
+  75%      { transform: rotate(8deg); }
+}
+
+.animate-trophy {
+  animation: trophy-bounce 2s ease-in-out infinite;
+}
+
+/* ── Progress bar fill ───────────────────────────────── */
+@keyframes progress-fill {
+  from { width: 0%; }
+}
+
+.animate-progress-fill {
+  animation: progress-fill 1s ease-out both;
+}
+
+/* ── Button press ────────────────────────────────────── */
+.btn-press {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.95);
+}
+
+/* ── Stagger delays (for list items) ─────────────────── */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+
+/* ── Completed day card (week view) ──────────────────── */
+.day-complete-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(52, 211, 153, 0.04) 100%);
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow:
+    0 0 20px -5px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(16, 185, 129, 0.1);
+}
+
+/* ── Today card (week view) ──────────────────────────── */
+.day-today-card {
+  background: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow:
+    0 0 20px -5px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(59, 130, 246, 0.1);
+}
+
+/* ── Habit row hover highlight ───────────────────────── */
+.habit-row {
+  transition: background 0.3s ease;
+}
+
+.habit-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ── Radial chart glow ───────────────────────────────── */
+.chart-glow {
+  filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.2));
+}
+
+/* ── Enhanced glass with animated border ─────────────── */
+@keyframes border-shimmer {
+  0%   { border-color: rgba(255, 255, 255, 0.08); }
+  50%  { border-color: rgba(255, 255, 255, 0.15); }
+  100% { border-color: rgba(255, 255, 255, 0.08); }
+}
+
+.glass-shimmer {
+  animation: border-shimmer 4s ease-in-out infinite;
 }

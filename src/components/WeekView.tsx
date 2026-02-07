@@ -1,7 +1,7 @@
-import { Component, For, createMemo, Show } from 'solid-js';
+import { Component, For, createMemo } from 'solid-js';
 import { store } from '../store';
 import { format, startOfWeek, addDays, isToday, parseISO } from 'date-fns';
-import { CheckCircle2, Circle } from 'lucide-solid';
+import { CheckCircle2, Circle, PartyPopper } from 'lucide-solid';
 
 const WeekView: Component = () => {
   const weekDays = createMemo(() => {
@@ -15,60 +15,98 @@ const WeekView: Component = () => {
     return habits.filter(h => h && h.name);
   });
 
-  return (
-    <div class="grid grid-cols-1 md:grid-cols-7 gap-6">
-      <For each={weekDays()}>
-        {(day) => (
-          <div class={`flex flex-col gap-4 p-4 rounded-3xl border transition-all duration-500
-            ${isToday(day) 
-              ? 'bg-blue-500/5 border-blue-500/30 ring-1 ring-blue-500/20' 
-              : 'bg-base-200/40 border-base-content/10'
-            }`}>
-            <div class="flex flex-col items-center gap-1 mb-2">
-              <span class={`text-[10px] uppercase tracking-widest font-bold ${isToday(day) ? 'text-blue-400' : 'text-base-content/50'}`}>
-                {format(day, 'EEEE')}
-              </span>
-              <span class={`text-2xl font-black ${isToday(day) ? 'text-base-content' : 'text-base-content/70'}`}>
-                {format(day, 'd')}
-              </span>
-            </div>
+  const isDayComplete = (day: Date) => {
+    const habits = validHabits();
+    if (habits.length === 0) return false;
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const dayHistory = store.state.history[dateStr];
+    return dayHistory ? habits.every(h => dayHistory[h.id]) : false;
+  };
 
-            <div class="flex flex-col gap-2">
-              <For each={validHabits()}>
-                {(habit) => {
-                  const dateStr = format(day, 'yyyy-MM-dd');
-                  const isChecked = () => store.state.history[dateStr]?.[habit.id] || false;
-                  
-                  return (
-                    <button
-                      onClick={() => store.toggleHabit(habit.id, dateStr)}
-                      class={`group flex items-center justify-between p-3 rounded-2xl transition-all
-                        ${isChecked() 
-                          ? 'bg-base-300/80 text-base-content shadow-sm' 
-                          : 'bg-base-100/50 text-base-content/40 hover:bg-base-200/50'
-                        }`}
-                    >
-                      <div class="flex items-center gap-3 overflow-hidden">
-                        <div 
-                          class="w-1.5 h-1.5 rounded-full flex-shrink-0" 
-                          style={{ 'background-color': habit.color }}
-                        ></div>
-                        <span class={`text-xs font-semibold truncate ${isChecked() ? 'opacity-100' : 'opacity-60'}`}>{habit.name}</span>
-                      </div>
-                      <div class={`transition-all duration-300 ${isChecked() ? 'scale-110' : 'opacity-20 group-hover:opacity-100 group-hover:scale-110'}`}>
-                        {isChecked() ? (
-                          <CheckCircle2 size={18} style={{ color: habit.color }} />
-                        ) : (
-                          <Circle size={18} />
-                        )}
-                      </div>
-                    </button>
-                  );
-                }}
-              </For>
+  return (
+    <div class="grid grid-cols-1 md:grid-cols-7 gap-6 animate-fade-in-up">
+      <For each={weekDays()}>
+        {(day, index) => {
+          const dayComplete = () => isDayComplete(day);
+          const today = isToday(day);
+
+          return (
+            <div
+              class={`flex flex-col gap-4 p-4 rounded-3xl border transition-all duration-500 animate-fade-in-up
+                ${dayComplete()
+                  ? 'day-complete-card ring-1 ring-emerald-500/20'
+                  : today
+                    ? 'day-today-card ring-1 ring-blue-500/20'
+                    : 'bg-base-200/40 border-base-content/10 hover:bg-base-200/60 hover:border-base-content/15'
+                }`}
+              style={{ 'animation-delay': `${index() * 0.07}s` }}
+            >
+              <div class="flex flex-col items-center gap-1 mb-2">
+                <span class={`text-[10px] uppercase tracking-widest font-bold transition-colors duration-500
+                  ${dayComplete() ? 'text-emerald-400' : today ? 'text-blue-400' : 'text-base-content/50'}`}>
+                  {format(day, 'EEEE')}
+                </span>
+                <div class="relative">
+                  <span class={`text-2xl font-black transition-colors duration-500
+                    ${dayComplete() ? 'text-emerald-400' : today ? 'text-base-content' : 'text-base-content/70'}`}>
+                    {format(day, 'd')}
+                  </span>
+                  {dayComplete() && (
+                    <PartyPopper size={14} class="absolute -top-2 -right-5 text-emerald-400 animate-check-pop" />
+                  )}
+                </div>
+                {dayComplete() && (
+                  <span class="text-[9px] uppercase tracking-widest font-bold text-emerald-400/70 animate-fade-in-up mt-1">
+                    All Done!
+                  </span>
+                )}
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <For each={validHabits()}>
+                  {(habit, habitIndex) => {
+                    const dateStr = format(day, 'yyyy-MM-dd');
+                    const isChecked = () => store.state.history[dateStr]?.[habit.id] || false;
+
+                    return (
+                      <button
+                        onClick={() => store.toggleHabit(habit.id, dateStr)}
+                        class={`group flex items-center justify-between p-3 rounded-2xl transition-all duration-300 btn-press
+                          ${isChecked()
+                            ? 'bg-base-300/80 text-base-content shadow-sm'
+                            : 'bg-base-100/50 text-base-content/40 hover:bg-base-200/50 hover:text-base-content/60'
+                          }`}
+                        style={isChecked() ? { 'box-shadow': `0 2px 12px -3px ${habit.color}30` } : {}}
+                      >
+                        <div class="flex items-center gap-3 overflow-hidden">
+                          <div
+                            class={`w-2 h-2 rounded-full flex-shrink-0 transition-all duration-500 ${isChecked() ? 'scale-125' : 'scale-100'}`}
+                            style={{
+                              'background-color': habit.color,
+                              'box-shadow': isChecked() ? `0 0 8px ${habit.color}60` : 'none'
+                            }}
+                          ></div>
+                          <span class={`text-xs font-semibold truncate transition-all duration-300 ${isChecked() ? 'opacity-100' : 'opacity-60'}`}>
+                            {habit.name}
+                          </span>
+                        </div>
+                        <div class={`transition-all duration-300 ${isChecked() ? 'scale-110' : 'opacity-20 group-hover:opacity-100 group-hover:scale-110'}`}>
+                          {isChecked() ? (
+                            <div class="animate-check-pop">
+                              <CheckCircle2 size={18} style={{ color: habit.color }} />
+                            </div>
+                          ) : (
+                            <Circle size={18} />
+                          )}
+                        </div>
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        }}
       </For>
     </div>
   );
