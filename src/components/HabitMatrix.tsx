@@ -17,14 +17,14 @@ const HabitMatrix: Component = () => {
         <table class="border-separate border-spacing-2">
           <thead>
             <tr>
-              <th class="sticky left-0 bg-slate-950/80 backdrop-blur-md z-20 min-w-[150px] text-left p-2 font-semibold text-slate-400">
+              <th class="sticky left-0 glass z-20 min-w-[150px] text-left p-4 font-semibold text-slate-400 border-b border-white/5 rounded-tl-2xl">
                 Habits
               </th>
               <For each={daysInMonth()}>
                 {(day) => (
-                  <th class={`min-w-[32px] text-center p-1 text-xs font-bold transition-colors ${isToday(day) ? 'text-blue-400' : 'text-slate-500'}`}>
-                    <div>{format(day, 'EEE')}</div>
-                    <div class={`mt-1 h-8 w-8 flex items-center justify-center rounded-full mx-auto ${isToday(day) ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : ''}`}>
+                  <th class={`min-w-[40px] text-center p-2 text-xs font-bold transition-colors border-b border-white/5 ${isToday(day) ? 'text-blue-400' : 'text-slate-500'}`}>
+                    <div class="mb-1 opacity-50 font-medium">{format(day, 'EEE')}</div>
+                    <div class={`h-10 w-10 flex items-center justify-center rounded-xl mx-auto transition-all ${isToday(day) ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.5)]' : 'bg-white/5'}`}>
                       {format(day, 'd')}
                     </div>
                   </th>
@@ -36,9 +36,9 @@ const HabitMatrix: Component = () => {
             <For each={store.state.habits}>
               {(habit) => (
                 <tr>
-                  <td class="sticky left-0 bg-slate-950/80 backdrop-blur-md z-20 p-2">
+                  <td class="sticky left-0 glass z-20 p-4 border-b border-white/5">
                     <div class="flex items-center gap-3">
-                      <div class="w-2 h-8 rounded-full" style={{ 'background-color': habit.color }}></div>
+                      <div class="w-1.5 h-6 rounded-full shadow-[0_0_10px_currentColor]" style={{ 'background-color': habit.color, 'color': habit.color }}></div>
                       <span class="font-medium text-slate-200 whitespace-nowrap">{habit.name}</span>
                     </div>
                   </td>

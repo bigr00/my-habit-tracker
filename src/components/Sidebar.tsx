@@ -41,13 +41,13 @@ const Sidebar: Component = () => {
   const series = () => [completionRate()];
 
   return (
-    <aside class="w-80 bg-slate-900 border-l border-slate-800 flex flex-col p-6 overflow-y-auto custom-scrollbar">
+    <aside class="w-80 glass border-l border-white/5 flex flex-col p-6 overflow-y-auto custom-scrollbar">
       <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
         <Target class="text-blue-400" size={20} />
         Today's Overview
       </h2>
 
-      <div class="bg-slate-800/40 rounded-3xl p-6 mb-6 border border-slate-700/50 flex flex-col items-center">
+      <div class="bg-white/5 rounded-3xl p-6 mb-6 border border-white/5 flex flex-col items-center shadow-2xl">
         <div class="w-full h-40">
           <SolidApexCharts options={chartOptions} series={series()} type="radialBar" height="100%" />
         </div>
@@ -55,12 +55,12 @@ const Sidebar: Component = () => {
       </div>
 
       <div class="grid grid-cols-2 gap-4 mb-8">
-        <div class="bg-slate-800/40 p-4 rounded-2xl border border-slate-700/50">
+        <div class="bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors cursor-default">
           <div class="text-orange-400 mb-1"><Flame size={20} /></div>
           <div class="text-xl font-bold text-slate-100">12</div>
           <div class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Best Streak</div>
         </div>
-        <div class="bg-slate-800/40 p-4 rounded-2xl border border-slate-700/50">
+        <div class="bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors cursor-default">
           <div class="text-yellow-400 mb-1"><Trophy size={20} /></div>
           <div class="text-xl font-bold text-slate-100">85</div>
           <div class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Score</div>

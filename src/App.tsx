@@ -20,7 +20,7 @@ const App: Component = () => {
   return (
     <div class="flex h-screen bg-slate-950 text-slate-200 overflow-hidden">
       <div class="flex-1 flex flex-col min-w-0">
-        <header class="h-16 flex items-center justify-between px-8 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md z-10">
+        <header class="h-16 flex items-center justify-between px-8 border-b border-white/5 glass z-20">
           <div class="flex items-center gap-4">
             <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
               Stellar Habits
