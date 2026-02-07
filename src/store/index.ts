@@ -26,7 +26,19 @@ const loadState = (): AppState => {
       if (Array.isArray(merged.habits)) {
         merged.habits = merged.habits
           .filter((h: any) => h && typeof h === 'object' && h.id && h.name)
-          .map((h: any) => ({ ...h, frequencyPerWeek: h.frequencyPerWeek ?? 7 }));
+          .map((h: any) => {
+            const migrated: any = { ...h, frequencyPerWeek: h.frequencyPerWeek ?? 7 };
+            // Validate specificDays: must be array of numbers 0-6
+            if (migrated.specificDays != null) {
+              if (
+                !Array.isArray(migrated.specificDays) ||
+                !migrated.specificDays.every((d: any) => typeof d === 'number' && d >= 0 && d <= 6)
+              ) {
+                delete migrated.specificDays;
+              }
+            }
+            return migrated;
+          });
       } else {
         merged.habits = [];
       }

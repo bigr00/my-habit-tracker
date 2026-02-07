@@ -1,5 +1,6 @@
 import { Component, createMemo, For } from 'solid-js';
 import { store } from '../store';
+import { isHabitApplicableOnDate } from '../types';
 import { format, addDays, parseISO, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { weekStartsOn } from '../config';
 import { SolidApexCharts } from 'solid-apexcharts';
@@ -41,9 +42,18 @@ const Sidebar: Component = () => {
     return format(current, 'MMMM yyyy');
   });
 
+  // Actual Date objects for the period (needed for isHabitApplicableOnDate)
+  const periodDays = createMemo(() => {
+    const current = parseISO(store.state.currentDate);
+    const start = isWeekView() ? startOfWeek(current, { weekStartsOn }) : startOfMonth(current);
+    const end = isWeekView() ? endOfWeek(current, { weekStartsOn }) : endOfMonth(current);
+    return eachDayOfInterval({ start, end });
+  });
+
   // All per-habit stats computed in one memo for reliable reactivity
   const habitStats = createMemo((): HabitPeriodStats[] => {
     const habits = validHabits();
+    const days = periodDays();
     const dates = periodDateStrings();
     const history = store.state.history;
     const weekView = isWeekView();
@@ -54,9 +64,17 @@ const Sidebar: Component = () => {
       for (const dateStr of dates) {
         if (history[dateStr]?.[h.id]) done++;
       }
-      const target = weekView
-        ? h.frequencyPerWeek
-        : Math.round(h.frequencyPerWeek * numWeeks);
+
+      let target: number;
+      if (h.specificDays && h.specificDays.length > 0) {
+        // Count how many days in this period match the specific days
+        target = days.filter(d => isHabitApplicableOnDate(h, d)).length;
+      } else {
+        target = weekView
+          ? h.frequencyPerWeek
+          : Math.round(h.frequencyPerWeek * numWeeks);
+      }
+
       const percentage = target > 0 ? Math.min(100, Math.round((done / target) * 100)) : 0;
       return {
         habitId: h.id,

@@ -1,6 +1,7 @@
 import { Component, createSignal, For, Show } from 'solid-js';
 import { store } from '../store';
 import { Habit } from '../types';
+import { weekStartsOn } from '../config';
 import { X, Check, Sparkles, Trash2 } from 'lucide-solid';
 
 const COLORS = [
@@ -12,6 +13,11 @@ const FREQ_LABELS: Record<number, string> = {
   1: '1x', 2: '2x', 3: '3x', 4: '4x', 5: '5x', 6: '6x', 7: 'Daily'
 };
 
+// Day labels indexed 0=Sun..6=Sat (JS getDay)
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+type ScheduleMode = 'frequency' | 'specificDays';
+
 interface HabitModalProps {
   onClose: () => void;
   habit?: Habit;
@@ -22,24 +28,49 @@ const HabitModal: Component<HabitModalProps> = (props) => {
   const [name, setName] = createSignal(props.habit?.name ?? '');
   const [selectedColor, setSelectedColor] = createSignal(props.habit?.color ?? COLORS[0]);
   const [frequency, setFrequency] = createSignal(props.habit?.frequencyPerWeek ?? 7);
+  const [scheduleMode, setScheduleMode] = createSignal<ScheduleMode>(
+    props.habit?.specificDays ? 'specificDays' : 'frequency'
+  );
+  const [selectedDays, setSelectedDays] = createSignal<number[]>(
+    props.habit?.specificDays ?? []
+  );
+
+  // Order day indices based on weekStartsOn config
+  const orderedDayIndices = () => {
+    return Array.from({ length: 7 }, (_, i) => (weekStartsOn + i) % 7);
+  };
+
+  const toggleDay = (day: number) => {
+    setSelectedDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  const canSubmit = () => {
+    if (!name().trim()) return false;
+    if (scheduleMode() === 'specificDays' && selectedDays().length === 0) return false;
+    return true;
+  };
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
-    if (!name().trim()) return;
+    if (!canSubmit()) return;
+
+    const isSpecificDays = scheduleMode() === 'specificDays';
+    const updates: Partial<Habit> = {
+      name: name(),
+      color: selectedColor(),
+      frequencyPerWeek: isSpecificDays ? selectedDays().length : frequency(),
+      specificDays: isSpecificDays ? [...selectedDays()].sort() : undefined,
+    };
 
     if (isEdit()) {
-      store.updateHabit(props.habit!.id, {
-        name: name(),
-        color: selectedColor(),
-        frequencyPerWeek: frequency(),
-      });
+      store.updateHabit(props.habit!.id, updates);
     } else {
       store.addHabit({
-        name: name(),
-        color: selectedColor(),
+        ...updates,
         icon: 'Activity',
-        frequencyPerWeek: frequency(),
-      });
+      } as Omit<Habit, 'id' | 'createdAt'>);
     }
     props.onClose();
   };
@@ -107,27 +138,84 @@ const HabitModal: Component<HabitModalProps> = (props) => {
           </div>
 
           <div class="space-y-3">
-            <label class="text-xs uppercase tracking-widest font-bold text-base-content/50">Frequency</label>
+            <label class="text-xs uppercase tracking-widest font-bold text-base-content/50">Schedule</label>
+            {/* Mode toggle */}
             <div class="flex gap-2">
-              <For each={[1, 2, 3, 4, 5, 6, 7]}>
-                {(n) => (
-                  <button
-                    type="button"
-                    onClick={() => setFrequency(n)}
-                    class={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-300 btn-press
-                      ${frequency() === n
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                        : 'bg-base-200 text-base-content/50 hover:bg-base-300 hover:text-base-content/70'}
-                    `}
-                  >
-                    {FREQ_LABELS[n]}
-                  </button>
-                )}
-              </For>
+              <button
+                type="button"
+                onClick={() => setScheduleMode('frequency')}
+                class={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 btn-press
+                  ${scheduleMode() === 'frequency'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                    : 'bg-base-200 text-base-content/50 hover:bg-base-300 hover:text-base-content/70'}
+                `}
+              >
+                Times per Week
+              </button>
+              <button
+                type="button"
+                onClick={() => setScheduleMode('specificDays')}
+                class={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 btn-press
+                  ${scheduleMode() === 'specificDays'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                    : 'bg-base-200 text-base-content/50 hover:bg-base-300 hover:text-base-content/70'}
+                `}
+              >
+                Specific Days
+              </button>
             </div>
-            <p class="text-xs text-base-content/40">
-              {frequency() === 7 ? 'Track this habit every day' : `Target: ${frequency()} times per week`}
-            </p>
+
+            {/* Frequency buttons */}
+            <Show when={scheduleMode() === 'frequency'}>
+              <div class="flex gap-2">
+                <For each={[1, 2, 3, 4, 5, 6, 7]}>
+                  {(n) => (
+                    <button
+                      type="button"
+                      onClick={() => setFrequency(n)}
+                      class={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-300 btn-press
+                        ${frequency() === n
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                          : 'bg-base-200 text-base-content/50 hover:bg-base-300 hover:text-base-content/70'}
+                      `}
+                    >
+                      {FREQ_LABELS[n]}
+                    </button>
+                  )}
+                </For>
+              </div>
+              <p class="text-xs text-base-content/40">
+                {frequency() === 7 ? 'Track this habit every day' : `Target: ${frequency()} times per week`}
+              </p>
+            </Show>
+
+            {/* Day-of-week toggles */}
+            <Show when={scheduleMode() === 'specificDays'}>
+              <div class="flex gap-2">
+                <For each={orderedDayIndices()}>
+                  {(dayIdx) => (
+                    <button
+                      type="button"
+                      onClick={() => toggleDay(dayIdx)}
+                      class={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-300 btn-press
+                        ${selectedDays().includes(dayIdx)
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                          : 'bg-base-200 text-base-content/50 hover:bg-base-300 hover:text-base-content/70'}
+                      `}
+                    >
+                      {DAY_LABELS[dayIdx]}
+                    </button>
+                  )}
+                </For>
+              </div>
+              <p class="text-xs text-base-content/40">
+                {selectedDays().length === 0
+                  ? 'Select at least one day'
+                  : selectedDays().length === 7
+                    ? 'Every day of the week'
+                    : `${selectedDays().length} days per week`}
+              </p>
+            </Show>
           </div>
 
           <div class="pt-4 flex gap-3">
@@ -149,7 +237,7 @@ const HabitModal: Component<HabitModalProps> = (props) => {
             </Show>
             <button
               type="submit"
-              disabled={!name().trim()}
+              disabled={!canSubmit()}
               class="flex-[2] px-6 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] transition-all duration-300 btn-press"
             >
               {isEdit() ? 'Save Changes' : 'Create Habit'}

@@ -1,8 +1,11 @@
 import { Component, For, createMemo, Show } from 'solid-js';
 import { store } from '../store';
-import { Habit } from '../types';
-import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from 'date-fns';
+import { Habit, isHabitApplicableOnDate } from '../types';
+import { format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isToday } from 'date-fns';
+import { weekStartsOn } from '../config';
 import { Check } from 'lucide-solid';
+
+const SHORT_DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 interface HabitMatrixProps {
   onEditHabit: (habit: Habit) => void;
@@ -22,22 +25,56 @@ const HabitMatrix: Component<HabitMatrixProps> = (props) => {
     return habits.filter(h => h && h.name);
   });
 
-  // Only daily (7x/week) habits count toward green "completed day" highlight
-  const dailyHabits = createMemo(() => validHabits().filter(h => h.frequencyPerWeek === 7));
+  /** Count how many times a habit is checked in the week containing `day`. */
+  const weeklyCompletions = (habit: Habit, day: Date) => {
+    const ws = startOfWeek(day, { weekStartsOn });
+    const we = endOfWeek(day, { weekStartsOn });
+    const days = eachDayOfInterval({ start: ws, end: we });
+    let count = 0;
+    for (const d of days) {
+      if (store.state.history[format(d, 'yyyy-MM-dd')]?.[habit.id]) count++;
+    }
+    return count;
+  };
+
+  /** Is the habit visible on this day? (accounts for weekly target being met) */
+  const isHabitVisibleOnDay = (habit: Habit, day: Date) => {
+    if (!isHabitApplicableOnDate(habit, day)) return false;
+    // Specific-day habits are fully governed by applicability
+    if (habit.specificDays && habit.specificDays.length > 0) return true;
+    // Daily habits always visible
+    if (habit.frequencyPerWeek >= 7) return true;
+    // Frequency habits: hide once weekly target met (keep if checked today)
+    const dateStr = format(day, 'yyyy-MM-dd');
+    if (store.state.history[dateStr]?.[habit.id]) return true;
+    return weeklyCompletions(habit, day) < habit.frequencyPerWeek;
+  };
 
   const completedDays = createMemo(() => {
-    const habits = dailyHabits();
+    const habits = validHabits();
     if (habits.length === 0) return new Set<string>();
     const completed = new Set<string>();
     for (const day of daysInMonth()) {
+      const visible = habits.filter(h => isHabitVisibleOnDay(h, day));
+      if (visible.length === 0) continue;
       const dateStr = format(day, 'yyyy-MM-dd');
       const dayHistory = store.state.history[dateStr];
-      if (dayHistory && habits.every(h => dayHistory[h.id])) {
+      if (dayHistory && visible.every(h => dayHistory[h.id])) {
         completed.add(dateStr);
       }
     }
     return completed;
   });
+
+  const frequencyBadge = (habit: Habit) => {
+    if (habit.specificDays && habit.specificDays.length > 0 && habit.specificDays.length < 7) {
+      return habit.specificDays.map(d => SHORT_DAY_NAMES[d]).join('/');
+    }
+    if (habit.frequencyPerWeek < 7) {
+      return `${habit.frequencyPerWeek}x/wk`;
+    }
+    return null;
+  };
 
   return (
     <div class="w-full h-full flex flex-col gap-6 animate-fade-in-up">
@@ -95,9 +132,9 @@ const HabitMatrix: Component<HabitMatrixProps> = (props) => {
                           }}
                         ></div>
                         <span class="font-bold text-base-content whitespace-nowrap group-hover:underline decoration-base-content/30 underline-offset-2">{habit.name}</span>
-                        <Show when={habit.frequencyPerWeek < 7}>
+                        <Show when={frequencyBadge(habit)}>
                           <span class="text-[10px] font-bold text-base-content/40 bg-base-content/5 px-1.5 py-0.5 rounded-md whitespace-nowrap">
-                            {habit.frequencyPerWeek}x/wk
+                            {frequencyBadge(habit)}
                           </span>
                         </Show>
                       </button>
@@ -106,8 +143,14 @@ const HabitMatrix: Component<HabitMatrixProps> = (props) => {
                       {(day) => {
                         const dateStr = format(day, 'yyyy-MM-dd');
                         const isChecked = createMemo(() => store.state.history[dateStr]?.[habit.id] || false);
+                        const visible = () => isHabitVisibleOnDay(habit, day);
 
                         return (
+                          <Show when={visible()} fallback={
+                            <td class="p-1">
+                              <div class="w-10 h-10 rounded-xl bg-base-content/3 opacity-40" />
+                            </td>
+                          }>
                           <td class="p-1">
                             <button
                               onClick={() => store.toggleHabit(habit.id, dateStr)}
@@ -131,6 +174,7 @@ const HabitMatrix: Component<HabitMatrixProps> = (props) => {
                               <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-base-content/5 rounded-xl pointer-events-none"></div>
                             </button>
                           </td>
+                          </Show>
                         );
                       }}
                     </For>
