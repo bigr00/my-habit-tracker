@@ -41,12 +41,17 @@ const WeekView: Component<WeekViewProps> = (props) => {
   };
 
   const isDayComplete = (day: Date) => {
-    // Only active (non-met-for-week) habits count toward day completion
-    const active = applicableHabitsForDay(day).filter(h => !isFreqMetForWeek(h, day));
-    if (active.length === 0) return false;
+    // Only habits with a firm daily expectation count toward day completion:
+    //  - specific-day habits assigned to this day
+    //  - daily habits (7x/week)
+    // Frequency-mode habits (e.g. 2x/week) are optional on any given day
+    const required = applicableHabitsForDay(day).filter(h =>
+      (h.specificDays && h.specificDays.length > 0) || h.frequencyPerWeek >= 7
+    );
+    if (required.length === 0) return false;
     const dateStr = format(day, 'yyyy-MM-dd');
     const dayHistory = store.state.history[dateStr];
-    return dayHistory ? active.every(h => dayHistory[h.id]) : false;
+    return dayHistory ? required.every(h => dayHistory[h.id]) : false;
   };
 
   const frequencyBadge = (habit: Habit) => {
@@ -92,11 +97,9 @@ const WeekView: Component<WeekViewProps> = (props) => {
                     <PartyPopper size={16} class="absolute -top-2 -right-6 text-emerald-400 animate-check-pop" />
                   )}
                 </div>
-                {dayComplete() && (
-                  <span class="text-[10px] uppercase tracking-widest font-bold text-emerald-400/70 animate-fade-in-up mt-1">
-                    All Done!
-                  </span>
-                )}
+                <span class={`text-[10px] uppercase tracking-widest font-bold mt-1 transition-opacity duration-500 ${dayComplete() ? 'text-emerald-400/70' : 'opacity-0'}`}>
+                  All Done!
+                </span>
               </div>
 
               {/* ── Habit cards ─────────────────────── */}

@@ -55,11 +55,15 @@ const HabitMatrix: Component<HabitMatrixProps> = (props) => {
     if (habits.length === 0) return new Set<string>();
     const completed = new Set<string>();
     for (const day of daysInMonth()) {
-      const visible = habits.filter(h => isHabitVisibleOnDay(h, day));
-      if (visible.length === 0) continue;
+      // Only habits with a firm daily expectation count toward day completion
+      const required = habits.filter(h =>
+        isHabitApplicableOnDate(h, day) &&
+        ((h.specificDays && h.specificDays.length > 0) || h.frequencyPerWeek >= 7)
+      );
+      if (required.length === 0) continue;
       const dateStr = format(day, 'yyyy-MM-dd');
       const dayHistory = store.state.history[dateStr];
-      if (dayHistory && visible.every(h => dayHistory[h.id])) {
+      if (dayHistory && required.every(h => dayHistory[h.id])) {
         completed.add(dateStr);
       }
     }
