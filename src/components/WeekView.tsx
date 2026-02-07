@@ -54,6 +54,15 @@ const WeekView: Component<WeekViewProps> = (props) => {
     return dayHistory ? required.every(h => dayHistory[h.id]) : false;
   };
 
+  /** How many times a frequency habit has been checked off this week. */
+  const weeklyCompletions = (habit: Habit) => {
+    let count = 0;
+    for (const wd of weekDays()) {
+      if (store.state.history[format(wd, 'yyyy-MM-dd')]?.[habit.id]) count++;
+    }
+    return count;
+  };
+
   const frequencyBadge = (habit: Habit) => {
     if (habit.specificDays && habit.specificDays.length > 0 && habit.specificDays.length < 7) {
       return habit.specificDays.map(d => SHORT_DAY_NAMES[d]).join('/');
@@ -125,11 +134,14 @@ const WeekView: Component<WeekViewProps> = (props) => {
                               Done this week
                             </span>
                           </div>
-                          <div
-                            class="w-11 h-11 rounded-full flex items-center justify-center"
-                            style={{ 'background-color': `${habit.color}20` }}
-                          >
-                            <Check size={18} style={{ color: habit.color }} class="opacity-50" />
+                          {/* Weekly progress dots */}
+                          <div class="flex items-center gap-1.5">
+                            {Array.from({ length: habit.frequencyPerWeek }, () => (
+                              <div
+                                class="w-2.5 h-2.5 rounded-full"
+                                style={{ 'background-color': habit.color, opacity: '0.6' }}
+                              />
+                            ))}
                           </div>
                         </div>
                       }>
@@ -169,6 +181,24 @@ const WeekView: Component<WeekViewProps> = (props) => {
                               <span class="text-[10px] font-semibold text-base-content/30 bg-base-content/5 px-2.5 py-0.5 rounded-full">
                                 {frequencyBadge(habit)}
                               </span>
+                            </Show>
+                            {/* Weekly progress dots for frequency habits */}
+                            <Show when={!habit.specificDays && habit.frequencyPerWeek < 7}>
+                              <div class="flex items-center gap-1.5 mt-0.5">
+                                {Array.from({ length: habit.frequencyPerWeek }, (_, i) => {
+                                  const filled = () => i < weeklyCompletions(habit);
+                                  return (
+                                    <div
+                                      class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+                                      style={{
+                                        'background-color': filled() ? habit.color : 'transparent',
+                                        'border': filled() ? 'none' : `1.5px solid ${habit.color}40`,
+                                        'box-shadow': filled() ? `0 0 6px ${habit.color}50` : 'none',
+                                      }}
+                                    />
+                                  );
+                                })}
+                              </div>
                             </Show>
                           </div>
 
