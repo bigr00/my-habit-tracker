@@ -1,9 +1,14 @@
-import { Component, For, createMemo } from 'solid-js';
+import { Component, For, createMemo, Show } from 'solid-js';
 import { store } from '../store';
+import { Habit } from '../types';
 import { format, startOfWeek, addDays, isToday, parseISO } from 'date-fns';
-import { CheckCircle2, Circle, PartyPopper } from 'lucide-solid';
+import { CheckCircle2, Circle, PartyPopper, Settings2 } from 'lucide-solid';
 
-const WeekView: Component = () => {
+interface WeekViewProps {
+  onEditHabit: (habit: Habit) => void;
+}
+
+const WeekView: Component<WeekViewProps> = (props) => {
   const weekDays = createMemo(() => {
     const start = startOfWeek(parseISO(store.state.currentDate));
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
@@ -15,8 +20,11 @@ const WeekView: Component = () => {
     return habits.filter(h => h && h.name);
   });
 
+  // Only daily (7x/week) habits count toward day completion
+  const dailyHabits = createMemo(() => validHabits().filter(h => h.frequencyPerWeek === 7));
+
   const isDayComplete = (day: Date) => {
-    const habits = validHabits();
+    const habits = dailyHabits();
     if (habits.length === 0) return false;
     const dateStr = format(day, 'yyyy-MM-dd');
     const dayHistory = store.state.history[dateStr];
@@ -71,7 +79,7 @@ const WeekView: Component = () => {
                     return (
                       <button
                         onClick={() => store.toggleHabit(habit.id, dateStr)}
-                        class={`group flex items-center justify-between p-3 rounded-2xl transition-all duration-300 btn-press
+                        class={`group flex items-center justify-between p-3 rounded-2xl transition-all duration-300 btn-press relative
                           ${isChecked()
                             ? 'bg-base-300/80 text-base-content shadow-sm'
                             : 'bg-base-100/50 text-base-content/40 hover:bg-base-200/50 hover:text-base-content/60'
@@ -89,15 +97,28 @@ const WeekView: Component = () => {
                           <span class={`text-xs font-semibold truncate transition-all duration-300 ${isChecked() ? 'opacity-100' : 'opacity-60'}`}>
                             {habit.name}
                           </span>
+                          <Show when={habit.frequencyPerWeek < 7}>
+                            <span class="text-[9px] font-bold text-base-content/30 bg-base-content/5 px-1 py-0.5 rounded whitespace-nowrap flex-shrink-0">
+                              {habit.frequencyPerWeek}x/wk
+                            </span>
+                          </Show>
                         </div>
-                        <div class={`transition-all duration-300 ${isChecked() ? 'scale-110' : 'opacity-20 group-hover:opacity-100 group-hover:scale-110'}`}>
-                          {isChecked() ? (
-                            <div class="animate-check-pop">
-                              <CheckCircle2 size={18} style={{ color: habit.color }} />
-                            </div>
-                          ) : (
-                            <Circle size={18} />
-                          )}
+                        <div class="flex items-center gap-1">
+                          <div
+                            onClick={(e) => { e.stopPropagation(); props.onEditHabit(habit); }}
+                            class="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-all duration-200 p-0.5 hover:bg-base-content/10 rounded cursor-pointer"
+                          >
+                            <Settings2 size={12} />
+                          </div>
+                          <div class={`transition-all duration-300 ${isChecked() ? 'scale-110' : 'opacity-20 group-hover:opacity-100 group-hover:scale-110'}`}>
+                            {isChecked() ? (
+                              <div class="animate-check-pop">
+                                <CheckCircle2 size={18} style={{ color: habit.color }} />
+                              </div>
+                            ) : (
+                              <Circle size={18} />
+                            )}
+                          </div>
                         </div>
                       </button>
                     );

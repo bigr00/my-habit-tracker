@@ -1,9 +1,14 @@
 import { Component, For, createMemo, Show } from 'solid-js';
 import { store } from '../store';
+import { Habit } from '../types';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from 'date-fns';
 import { Check } from 'lucide-solid';
 
-const HabitMatrix: Component = () => {
+interface HabitMatrixProps {
+  onEditHabit: (habit: Habit) => void;
+}
+
+const HabitMatrix: Component<HabitMatrixProps> = (props) => {
   const daysInMonth = createMemo(() => {
     const date = parseISO(store.state.currentDate);
     const start = startOfMonth(date);
@@ -17,9 +22,11 @@ const HabitMatrix: Component = () => {
     return habits.filter(h => h && h.name);
   });
 
-  // Compute which days have ALL habits completed
+  // Only daily (7x/week) habits count toward green "completed day" highlight
+  const dailyHabits = createMemo(() => validHabits().filter(h => h.frequencyPerWeek === 7));
+
   const completedDays = createMemo(() => {
-    const habits = validHabits();
+    const habits = dailyHabits();
     if (habits.length === 0) return new Set<string>();
     const completed = new Set<string>();
     for (const day of daysInMonth()) {
@@ -76,7 +83,10 @@ const HabitMatrix: Component = () => {
                 return (
                   <tr class={`habit-row animate-fade-in-up`} style={{ 'animation-delay': `${index() * 0.06}s` }}>
                     <td class="sticky left-0 glass z-20 p-4 border-b border-base-content/5">
-                      <div class="flex items-center gap-3">
+                      <button
+                        onClick={() => props.onEditHabit(habit)}
+                        class="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                      >
                         <div
                           class="w-2 h-6 rounded-full transition-all duration-300"
                           style={{
@@ -84,8 +94,13 @@ const HabitMatrix: Component = () => {
                             'box-shadow': `0 0 12px ${habit.color}60`
                           }}
                         ></div>
-                        <span class="font-bold text-base-content whitespace-nowrap">{habit.name}</span>
-                      </div>
+                        <span class="font-bold text-base-content whitespace-nowrap group-hover:underline decoration-base-content/30 underline-offset-2">{habit.name}</span>
+                        <Show when={habit.frequencyPerWeek < 7}>
+                          <span class="text-[10px] font-bold text-base-content/40 bg-base-content/5 px-1.5 py-0.5 rounded-md whitespace-nowrap">
+                            {habit.frequencyPerWeek}x/wk
+                          </span>
+                        </Show>
+                      </button>
                     </td>
                     <For each={daysInMonth()}>
                       {(day) => {

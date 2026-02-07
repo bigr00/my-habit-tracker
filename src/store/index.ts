@@ -22,9 +22,11 @@ const loadState = (): AppState => {
       // Merge parsed data into default state to ensure all keys exist
       const merged = { ...defaultState, ...parsed };
 
-      // Validate habits
+      // Validate habits and migrate frequencyPerWeek
       if (Array.isArray(merged.habits)) {
-        merged.habits = merged.habits.filter((h: any) => h && typeof h === 'object' && h.id && h.name);
+        merged.habits = merged.habits
+          .filter((h: any) => h && typeof h === 'object' && h.id && h.name)
+          .map((h: any) => ({ ...h, frequencyPerWeek: h.frequencyPerWeek ?? 7 }));
       } else {
         merged.habits = [];
       }
@@ -46,9 +48,9 @@ const loadState = (): AppState => {
   }
   return {
     habits: [
-      { id: '1', name: 'Drink Water', color: '#3b82f6', icon: 'Droplets', createdAt: Date.now() },
-      { id: '2', name: 'Exercise', color: '#ef4444', icon: 'Activity', createdAt: Date.now() },
-      { id: '3', name: 'Read', color: '#10b981', icon: 'Book', createdAt: Date.now() },
+      { id: '1', name: 'Drink Water', color: '#3b82f6', icon: 'Droplets', frequencyPerWeek: 7, createdAt: Date.now() },
+      { id: '2', name: 'Exercise', color: '#ef4444', icon: 'Activity', frequencyPerWeek: 7, createdAt: Date.now() },
+      { id: '3', name: 'Read', color: '#10b981', icon: 'Book', frequencyPerWeek: 7, createdAt: Date.now() },
     ],
     history: {},
     viewMode: 'week',

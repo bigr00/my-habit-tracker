@@ -4,11 +4,13 @@ import HabitMatrix from './components/HabitMatrix';
 import WeekView from './components/WeekView';
 import HabitModal from './components/HabitModal';
 import { store } from './store';
+import { Habit } from './types';
 import { format, parseISO, addMonths, subMonths } from 'date-fns';
 import { ChevronLeft, ChevronRight, Plus, Sun, Moon, Sparkles } from 'lucide-solid';
 
 const App: Component = () => {
   const [showModal, setShowModal] = createSignal(false);
+  const [editingHabit, setEditingHabit] = createSignal<Habit | null>(null);
   const currentMonthName = () => format(parseISO(store.state.currentDate), 'MMMM yyyy');
 
   createEffect(() => {
@@ -23,6 +25,10 @@ const App: Component = () => {
     const current = parseISO(store.state.currentDate);
     const next = direction > 0 ? addMonths(current, 1) : subMonths(current, 1);
     store.setCurrentDate(format(next, 'yyyy-MM-dd'));
+  };
+
+  const handleEditHabit = (habit: Habit) => {
+    setEditingHabit(habit);
   };
 
   return (
@@ -91,7 +97,10 @@ const App: Component = () => {
 
         {/* ── Main content ───────────────────────────── */}
         <main class="flex-1 overflow-auto custom-scrollbar p-8">
-          {store.state.viewMode === 'month' ? <HabitMatrix /> : <WeekView />}
+          {store.state.viewMode === 'month'
+            ? <HabitMatrix onEditHabit={handleEditHabit} />
+            : <WeekView onEditHabit={handleEditHabit} />
+          }
         </main>
       </div>
 
@@ -99,6 +108,12 @@ const App: Component = () => {
 
       <Show when={showModal()}>
         <HabitModal onClose={() => setShowModal(false)} />
+      </Show>
+
+      <Show when={editingHabit()}>
+        {(habit) => (
+          <HabitModal habit={habit()} onClose={() => setEditingHabit(null)} />
+        )}
       </Show>
     </div>
   );

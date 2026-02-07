@@ -1,6 +1,6 @@
 import { Component, createMemo, For } from 'solid-js';
 import { store } from '../store';
-import { format, addDays } from 'date-fns';
+import { format, addDays, startOfWeek, eachDayOfInterval, endOfWeek } from 'date-fns';
 import { SolidApexCharts } from 'solid-apexcharts';
 import { Trophy, Flame, Target, TrendingUp } from 'lucide-solid';
 
@@ -13,12 +13,34 @@ const Sidebar: Component = () => {
     return habits.filter(h => h && h.id && h.name);
   });
 
+  // Get weekly completions for a habit (current week)
+  const getWeeklyCompletions = (habitId: string) => {
+    const now = new Date();
+    const weekStart = startOfWeek(now);
+    const weekEnd = endOfWeek(now);
+    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+    let count = 0;
+    for (const day of days) {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      if (store.state.history[dateStr]?.[habitId]) count++;
+    }
+    return count;
+  };
+
+  // Completion rate: daily habits check today's completion, non-daily check weekly target met
   const completionRate = createMemo(() => {
     const habits = validHabits();
     if (habits.length === 0) return 0;
     const historyToday = store.state.history[today()] || {};
-    const completed = habits.filter(h => historyToday[h.id]).length;
-    return Math.round((completed / habits.length) * 100);
+    let metCount = 0;
+    for (const h of habits) {
+      if (h.frequencyPerWeek === 7) {
+        if (historyToday[h.id]) metCount++;
+      } else {
+        if (getWeeklyCompletions(h.id) >= h.frequencyPerWeek) metCount++;
+      }
+    }
+    return Math.round((metCount / habits.length) * 100);
   });
 
   const series = () => [completionRate()];
@@ -95,7 +117,7 @@ const Sidebar: Component = () => {
         </div>
         <p class={`text-sm mt-2 font-medium transition-colors duration-500
           ${completionRate() === 100 ? 'text-emerald-400' : 'text-base-content/60'}`}>
-          {completionRate() === 100 ? 'All habits complete!' : 'Daily Progress'}
+          {completionRate() === 100 ? 'All habits on track!' : 'Daily Progress'}
         </p>
       </div>
 
@@ -125,11 +147,11 @@ const Sidebar: Component = () => {
       <div class="space-y-3">
         <For each={validHabits()}>
           {(habit, index) => {
-            const completedCount = createMemo(() => {
-               return Object.values(store.state.history).filter(day => day[habit.id]).length;
-            });
-            const maxDays = createMemo(() => Object.keys(store.state.history).length || 1);
-            const percentage = createMemo(() => Math.round((completedCount() / maxDays()) * 100));
+            const isDaily = () => habit.frequencyPerWeek === 7;
+            const weeklyDone = createMemo(() => getWeeklyCompletions(habit.id));
+            const target = () => habit.frequencyPerWeek;
+            const weeklyMet = () => weeklyDone() >= target();
+            const percentage = createMemo(() => Math.min(100, Math.round((weeklyDone() / target()) * 100)));
 
             return (
               <div
@@ -149,18 +171,22 @@ const Sidebar: Component = () => {
                       {habit.name}
                     </span>
                   </div>
-                  <div class="text-xs font-mono font-bold text-base-content/40 bg-base-300/50 px-2 py-1 rounded-lg group-hover:bg-base-300 transition-all duration-300">
-                    {completedCount()}
+                  <div class={`text-xs font-mono font-bold px-2 py-1 rounded-lg transition-all duration-300
+                    ${weeklyMet()
+                      ? 'text-emerald-400 bg-emerald-500/10'
+                      : 'text-base-content/40 bg-base-300/50 group-hover:bg-base-300'
+                    }`}>
+                    {weeklyDone()}/{target()}
                   </div>
                 </div>
-                {/* Mini progress bar */}
+                {/* Progress bar */}
                 <div class="h-1 bg-base-content/5 rounded-full overflow-hidden ml-5">
                   <div
                     class="h-full rounded-full transition-all duration-700 animate-progress-fill"
                     style={{
                       width: `${percentage()}%`,
-                      'background-color': habit.color,
-                      'box-shadow': `0 0 8px ${habit.color}40`
+                      'background-color': weeklyMet() ? '#10b981' : habit.color,
+                      'box-shadow': `0 0 8px ${weeklyMet() ? '#10b981' : habit.color}40`
                     }}
                   />
                 </div>
